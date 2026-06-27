@@ -1,0 +1,17 @@
+{
+  "name": "how-you-remind-me",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "frontend",
+    "backend/api",
+    "backend/dispatcher"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w frontend",
+    "build:frontend": "npm run build -w frontend",
+    "build:api": "npm run build -w @hyrm/api",
+    "build:dispatcher": "npm run build -w @hyrm/dispatcher",
+    "build": "npm run build -w shared && npm run build:frontend && npm run build:api && npm run build:dispatcher"
+  }
+}

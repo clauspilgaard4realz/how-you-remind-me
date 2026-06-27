@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAllowedUser() {
+      return request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+    }
+
+    function isAllowedUserOnCreate() {
+      return request.auth != null
+        && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    match /task_templates/{templateId} {
+      allow read: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /task_occurrences/{occurrenceId} {
+      allow read: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /notification_attempts/{attemptId} {
+      allow read, write: if false;
+    }
+
+    match /system/dispatch_health {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    match /users/{userId}/push_devices/{deviceId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+  }
+}
