@@ -1,3 +1,4 @@
+import './loadEnv.js';
 import cors from 'cors';
 import express from 'express';
 import { apiRouter } from './routes/api.js';
@@ -9,7 +10,11 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'reminder-api' });
+  res.json({
+    ok: true,
+    service: 'reminder-api',
+    projectId: process.env.FIREBASE_PROJECT_ID ?? null,
+  });
 });
 
 app.use('/api', apiRouter);

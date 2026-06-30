@@ -1,8 +1,10 @@
+import '../loadEnv.js';
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 let app: App;
+let db: Firestore;
 
 export function getFirebaseApp(): App {
   if (!app) {
@@ -18,7 +20,11 @@ export function getFirebaseApp(): App {
 }
 
 export function getDb() {
-  return getFirestore(getFirebaseApp());
+  if (!db) {
+    db = getFirestore(getFirebaseApp());
+    db.settings({ ignoreUndefinedProperties: true });
+  }
+  return db;
 }
 
 export function getAdminAuth() {

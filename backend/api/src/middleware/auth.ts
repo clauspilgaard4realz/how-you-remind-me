@@ -1,9 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getAdminAuth } from '../lib/firebase.js';
 
-const allowedUid = process.env.ALLOWED_UID ?? '';
-
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const allowedUid = process.env.ALLOWED_UID ?? '';
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
     res.status(401).json({ error: 'Missing bearer token' });
@@ -19,7 +18,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     }
     req.user = { uid: decoded.uid, email: decoded.email };
     next();
-  } catch {
+  } catch (err) {
+    console.error('verifyIdToken failed:', err instanceof Error ? err.message : err);
     res.status(401).json({ error: 'Invalid token' });
   }
 }
