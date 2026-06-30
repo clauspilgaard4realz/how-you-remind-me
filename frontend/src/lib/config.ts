@@ -9,7 +9,7 @@ export const firebaseConfig = {
 
 export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? '';
 export const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY ?? '';
-export const allowedUid = import.meta.env.VITE_ALLOWED_UID ?? '';
+export const allowedUid = (import.meta.env.VITE_ALLOWED_UID ?? '').trim();
 
 export function assertClientConfig(): void {
   const required = [

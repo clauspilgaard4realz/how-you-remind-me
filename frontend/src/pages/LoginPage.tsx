@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom';
 import { allowedUid } from '../lib/config';
 import { useAuth } from '../hooks/useAuth';
 import { AppShell, Banner, Button, Card } from '../components/ui';
@@ -13,11 +14,27 @@ export function LoginPage() {
     );
   }
 
+  if (user && allowed) {
+    return <Navigate to="/" replace />;
+  }
+
   if (user && !allowed) {
     return (
       <AppShell title="Ingen adgang">
         <Banner tone="error">
-          Denne Firebase-konto ({user.email}) er ikke whitelisted. Forventet UID: {allowedUid}
+          <p>
+            Denne Firebase-konto ({user.email}) matcher ikke whitelist.
+          </p>
+          <p className="mt-2 font-mono text-xs">
+            Din UID (kopiér til VITE_ALLOWED_UID i frontend/.env):
+            <br />
+            {user.uid}
+          </p>
+          {allowedUid ? (
+            <p className="mt-2 font-mono text-xs">Forventet i .env: {allowedUid}</p>
+          ) : (
+            <p className="mt-2">VITE_ALLOWED_UID er tom — udfyld frontend/.env og genstart dev-server.</p>
+          )}
         </Banner>
         <Button variant="secondary" onClick={() => void signOutUser()}>
           Log ud

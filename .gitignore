@@ -8,3 +8,9 @@ dist/
 .firebase/
 serviceAccount*.json
 *.tsbuildinfo
+
+# Secrets og lokal deploy-config
+deploy/config.local.ps1
+deploy/secrets.local.ps1
+frontend/.env.production
+frontend/.env
