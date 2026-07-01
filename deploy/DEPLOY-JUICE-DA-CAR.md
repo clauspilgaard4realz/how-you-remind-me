@@ -29,6 +29,19 @@ VITE_ALLOWED_UID=...
 
 ## Deploy-rækkefølge
 
+**Region:** Alt compute og images skal ligge i `europe-west1`. Brug **ikke** `gcr.io` (legacy Container Registry → US).
+
+```powershell
+# Engang: Artifact Registry i EU
+gcloud artifacts repositories create hyrm `
+  --repository-format=docker `
+  --location=europe-west1 `
+  --project juice-da-car `
+  --description "How You Remind Me container images"
+```
+
+Build + deploy (Cloud Build kører regionalt i EU):
+
 ```powershell
 cd "c:\Users\claus\How you remind me"
 npm install
@@ -37,33 +50,32 @@ npm run build -w @hyrm/shared
 # 1. Firestore rules + indexes
 firebase deploy --only firestore:rules,firestore:indexes --project juice-da-car
 
-# 2. Cloud Run API
+# 2. Build images (europe-west1)
+gcloud builds submit --config deploy/cloudbuild-api.yaml --project juice-da-car --region europe-west1
+gcloud builds submit --config deploy/cloudbuild-dispatcher.yaml --project juice-da-car --region europe-west1
+
+# 3. Deploy Cloud Run fra EU registry
 gcloud run deploy reminder-api `
-  --source . `
-  --dockerfile backend/api/Dockerfile `
+  --image europe-west1-docker.pkg.dev/juice-da-car/hyrm/reminder-api:latest `
   --region europe-west1 `
   --project juice-da-car `
   --allow-unauthenticated `
   --set-env-vars "ALLOWED_UID=DIN_UID,FIREBASE_PROJECT_ID=juice-da-car"
 
-# 3. VAPID secret + Dispatcher
-echo -n "PRIVATE_KEY" | gcloud secrets create vapid-private-key --data-file=- --project juice-da-car --replication-policy=user-managed --locations=europe-west1
-
 gcloud run deploy reminder-dispatcher `
-  --source . `
-  --dockerfile backend/dispatcher/Dockerfile `
+  --image europe-west1-docker.pkg.dev/juice-da-car/hyrm/reminder-dispatcher:latest `
   --region europe-west1 `
   --project juice-da-car `
   --no-allow-unauthenticated `
-  --set-secrets "VAPID_PRIVATE_KEY=vapid-private-key:latest,SMTP_PASS=smtp-password:latest" `
-  --set-env-vars "ALLOWED_UID=DIN_UID,VAPID_PUBLIC_KEY=DIN_PUBLIC_KEY,VAPID_SUBJECT=mailto:claus@replaymaker.dk,FIREBASE_PROJECT_ID=juice-da-car,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=claus@replaymaker.dk,EMAIL_FROM=How You Remind Me <reminders@replaymaker.dk>,APP_BASE_URL=https://juice-da-car.web.app"
+  --set-secrets "VAPID_PRIVATE_KEY=vapid-private-key:latest" `
+  --set-env-vars "ALLOWED_UID=DIN_UID,VAPID_PUBLIC_KEY=DIN_PUBLIC_KEY,VAPID_SUBJECT=mailto:claus@replaymaker.dk,FIREBASE_PROJECT_ID=juice-da-car"
+```
 
-# E-mail: opret Google app password og gem som secret (engang)
-echo -n "DIT_APP_PASSWORD" | gcloud secrets create smtp-password --data-file=- --project juice-da-car --replication-policy=user-managed --locations=europe-west1
+Alternativ (uden Cloud Build): `--source` deploy bygger også i EU når `--region europe-west1` angives.
 
-# Modtager hentes fra Firebase Auth (Google login). Override: NOTIFICATION_EMAIL=...
-
-# 4. Cloud Scheduler (efter dispatcher-URL er kendt)
+```powershell
+# 3. VAPID secret (engang)
+echo -n "PRIVATE_KEY" | gcloud secrets create vapid-private-key --data-file=- --project juice-da-car --replication-policy=user-managed --locations=europe-west1
 # Se README.md
 
 # 5. Frontend

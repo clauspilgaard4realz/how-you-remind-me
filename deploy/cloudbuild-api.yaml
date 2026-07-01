@@ -5,9 +5,9 @@ steps:
       - -f
       - backend/api/Dockerfile
       - -t
-      - gcr.io/$PROJECT_ID/reminder-api:latest
+      - europe-west1-docker.pkg.dev/$PROJECT_ID/hyrm/reminder-api:latest
       - .
 images:
-  - gcr.io/$PROJECT_ID/reminder-api:latest
+  - europe-west1-docker.pkg.dev/$PROJECT_ID/hyrm/reminder-api:latest
 options:
   logging: CLOUD_LOGGING_ONLY
