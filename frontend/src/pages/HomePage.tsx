@@ -21,8 +21,9 @@ import { PushHealthPanel } from '../components/PushHealthPanel';
 import { SnoozeControls } from '../components/SnoozeControls';
 import { AppShell, Banner, Button, Card } from '../components/ui';
 
-function templateTitle(templateId: string, templates: TaskTemplate[]): string {
-  return templates.find((t) => t.id === templateId)?.title ?? 'Ukendt opgave';
+function occurrenceTitle(occurrence: TaskOccurrence, templates: TaskTemplate[]): string {
+  if (occurrence.templateTitle) return occurrence.templateTitle;
+  return templates.find((t) => t.id === occurrence.templateId)?.title ?? 'Ukendt opgave';
 }
 
 function OccurrenceRow({
@@ -258,7 +259,7 @@ export function HomePage() {
           <OccurrenceRow
             key={occurrence.id}
             occurrence={occurrence}
-            title={templateTitle(occurrence.templateId, templates)}
+            title={occurrenceTitle(occurrence, templates)}
             highlighted={occurrence.id === highlightId}
             onComplete={completeOccurrence}
             onSnooze={snoozeOccurrence}

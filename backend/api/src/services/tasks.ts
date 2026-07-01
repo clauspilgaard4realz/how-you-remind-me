@@ -55,6 +55,7 @@ export async function createSingleTask(
     id: occurrenceId,
     ownerId,
     templateId,
+    templateTitle: body.title.trim(),
     templateRevision: 1,
     scheduledAt: body.reminderStartsAt,
     scheduledLocalDate: local.date,

@@ -29,7 +29,13 @@ export async function materializeTemplate(
     const occurrence = buildOccurrenceDocument(template, slot, now);
     const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrence.id);
     const existing = await ref.get();
-    if (existing.exists) continue;
+    if (existing.exists) {
+      const data = existing.data() as TaskOccurrence;
+      if (!data.templateTitle && template.title) {
+        await ref.update({ templateTitle: template.title, updatedAt: now });
+      }
+      continue;
+    }
     await ref.set(occurrence);
     created.push(occurrence);
   }

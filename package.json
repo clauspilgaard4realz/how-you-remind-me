@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev:frontend": "npm run dev -w frontend",
+    "dev:api": "npm run dev -w @hyrm/api",
     "build:frontend": "npm run build -w frontend",
     "build:api": "npm run build -w @hyrm/api",
     "build:dispatcher": "npm run build -w @hyrm/dispatcher",

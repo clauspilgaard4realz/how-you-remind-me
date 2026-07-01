@@ -26,14 +26,17 @@ export function useTaskTemplates() {
 
     const q = query(
       collection(db, COLLECTIONS.taskTemplates),
-      where('ownerId', '==', user.uid),
-      orderBy('updatedAt', 'desc')
+      where('ownerId', '==', user.uid)
     );
 
     return onSnapshot(
       q,
       (snap) => {
-        setTemplates(snap.docs.map((d) => d.data() as TaskTemplate));
+        setTemplates(
+          snap.docs
+            .map((d) => ({ ...d.data(), id: d.id }) as TaskTemplate)
+            .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+        );
         setLoading(false);
       },
       (error) => {
@@ -72,7 +75,9 @@ export function useOpenOccurrences() {
     return onSnapshot(
       q,
       (snap) => {
-        setOccurrences(snap.docs.map((d) => d.data() as TaskOccurrence));
+        setOccurrences(
+          snap.docs.map((d) => ({ ...d.data(), id: d.id }) as TaskOccurrence)
+        );
         setLoading(false);
       },
       (error) => {

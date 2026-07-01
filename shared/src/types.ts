@@ -97,6 +97,8 @@ export interface TaskOccurrence {
   id: string;
   ownerId: string;
   templateId: string;
+  /** Denormaliseret titel — så UI virker uden template-opslag */
+  templateTitle?: string;
   templateRevision: number;
   scheduledAt: string;
   scheduledLocalDate: string;

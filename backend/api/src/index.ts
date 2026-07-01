@@ -19,6 +19,12 @@ app.get('/health', (_req, res) => {
 
 app.use('/api', apiRouter);
 
+app.use('/api/*splat', (_req, res) => {
+  res.status(404).json({
+    error: 'API route not found — genstart lokal API (npm run dev:api) efter kodeændringer',
+  });
+});
+
 app.listen(port, () => {
   console.log(`Reminder API listening on ${port}`);
 });

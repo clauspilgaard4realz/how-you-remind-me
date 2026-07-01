@@ -19,6 +19,7 @@ export function buildOccurrenceDocument(
     id: singleOccurrenceId(template.id, slot.localDate, slot.localTime),
     ownerId: template.ownerId,
     templateId: template.id,
+    templateTitle: template.title,
     templateRevision: template.revision,
     scheduledAt: slot.scheduledAt,
     scheduledLocalDate: slot.localDate,
