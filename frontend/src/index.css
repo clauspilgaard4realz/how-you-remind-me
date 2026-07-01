@@ -1,13 +1,51 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap");
 @import "tailwindcss";
+
+@theme {
+  --color-hyrm-bg: #16141c;
+  --color-hyrm-surface: #221d2b;
+  --color-hyrm-elevated: #2a2533;
+  --color-hyrm-sheet: #201c28;
+  --color-hyrm-accent: #ff8a4c;
+  --color-hyrm-danger: #ff6b5e;
+  --color-hyrm-success: #4ad0a0;
+  --color-hyrm-text: #f3efe9;
+  --color-hyrm-muted: #9b93a6;
+  --color-hyrm-muted-dim: #645d70;
+  --color-hyrm-time: #c9c2d2;
+  --color-hyrm-overdue-bg: #2a1d22;
+  --color-hyrm-checkbox: #4a4356;
+  --color-hyrm-accent-soft: rgba(255, 138, 76, 0.16);
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+
+  --radius-card: 18px;
+  --radius-btn: 15px;
+  --radius-pill: 11px;
+  --radius-chip: 8px;
+  --radius-sheet: 26px;
+}
 
 :root {
   color-scheme: dark;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 body {
   margin: 0;
   min-height: 100dvh;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--color-hyrm-bg);
+  color: var(--color-hyrm-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.font-display {
+  font-family: var(--font-display);
 }

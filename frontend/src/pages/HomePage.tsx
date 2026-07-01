@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { SnoozePreset, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
+import type { SnoozePreset, TaskOccurrence } from '@hyrm/shared';
 import { apiFetch } from '../lib/api';
 import {
   getExistingPushSubscription,
@@ -13,67 +13,23 @@ import {
   unsubscribeFromPush,
   type PushHealthState,
 } from '../lib/push';
-import { formatLocalDateTime } from '../lib/time';
-import { displayOccurrenceStatus } from '../lib/occurrence';
+import {
+  formatTodayEyebrow,
+  groupOccurrences,
+  occurrenceTitle,
+} from '../lib/taskDisplay';
 import { useAuth } from '../hooks/useAuth';
 import { useDispatchHealth, useOpenOccurrences, useTaskTemplates } from '../hooks/useFirestoreData';
-import { PushHealthPanel } from '../components/PushHealthPanel';
-import { SnoozeControls } from '../components/SnoozeControls';
-import { AppShell, Banner, Button, Card } from '../components/ui';
-
-function occurrenceTitle(occurrence: TaskOccurrence, templates: TaskTemplate[]): string {
-  if (occurrence.templateTitle) return occurrence.templateTitle;
-  return templates.find((t) => t.id === occurrence.templateId)?.title ?? 'Ukendt opgave';
-}
-
-function OccurrenceRow({
-  occurrence,
-  title,
-  highlighted,
-  onComplete,
-  onSnooze,
-  completing,
-  snoozing,
-}: {
-  occurrence: TaskOccurrence;
-  title: string;
-  highlighted: boolean;
-  onComplete: (id: string) => void;
-  onSnooze: (id: string, preset: SnoozePreset, customAt?: string) => Promise<void>;
-  completing: string | null;
-  snoozing: string | null;
-}) {
-  const busy = completing === occurrence.id || snoozing === occurrence.id;
-
-  return (
-    <Card className={highlighted ? 'border-sky-500/60 ring-1 ring-sky-500/30' : ''}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="font-medium text-white">{title}</h3>
-          <p className="mt-1 text-sm text-slate-400">
-            Planlagt: {formatLocalDateTime(occurrence.scheduledAt)}
-          </p>
-          {occurrence.nextReminderAt && (
-            <p className="text-sm text-slate-500">
-              Næste påmindelse: {formatLocalDateTime(occurrence.nextReminderAt)}
-            </p>
-          )}
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            {displayOccurrenceStatus(occurrence.status, occurrence.snoozedUntil)}
-          </p>
-          <SnoozeControls
-            occurrence={occurrence}
-            busy={snoozing === occurrence.id}
-            onSnooze={(preset, customAt) => onSnooze(occurrence.id, preset, customAt)}
-          />
-        </div>
-        <Button variant="secondary" disabled={busy} onClick={() => onComplete(occurrence.id)}>
-          {completing === occurrence.id ? '…' : 'Klaret'}
-        </Button>
-      </div>
-    </Card>
-  );
-}
+import { EmptyState } from '../components/EmptyState';
+import {
+  PushInstallHint,
+  PushMessageBanner,
+  PushStatusChip,
+} from '../components/PushStatusChip';
+import { SectionHeader } from '../components/SectionHeader';
+import { TaskDetailSheet } from '../components/TaskDetailSheet';
+import { TaskRow } from '../components/TaskRow';
+import { AppShell } from '../components/ui';
 
 export function HomePage() {
   const { getIdToken, signOutUser } = useAuth();
@@ -86,8 +42,9 @@ export function HomePage() {
     applySnoozeLocally,
   } = useOpenOccurrences();
   const dispatchHealth = useDispatchHealth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('occurrence');
+  const actionParam = searchParams.get('action');
 
   const [completing, setCompleting] = useState<string | null>(null);
   const [snoozing, setSnoozing] = useState<string | null>(null);
@@ -95,6 +52,10 @@ export function HomePage() {
   const [pushMessage, setPushMessage] = useState<string | null>(null);
   const [needsInstall, setNeedsInstall] = useState(false);
   const [pushState, setPushState] = useState<PushHealthState | null>(null);
+  const [selectedOccurrence, setSelectedOccurrence] = useState<TaskOccurrence | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  const templateById = (id: string) => templates.find((t) => t.id === id);
 
   const refreshPushHealth = useCallback(async () => {
     const state = await getPushHealthState();
@@ -118,6 +79,29 @@ export function HomePage() {
       setPushMessage(`Push modtaget: ${msg.title} — ${msg.body}`);
     });
   }, []);
+
+  useEffect(() => {
+    if (highlightId && occurrences.length) {
+      const match = occurrences.find((o) => o.id === highlightId);
+      if (match) setSelectedOccurrence(match);
+    }
+  }, [highlightId, occurrences]);
+
+  const actionHandled = useRef(false);
+
+  useEffect(() => {
+    if (!actionParam || !highlightId || actionHandled.current) return;
+    actionHandled.current = true;
+    if (actionParam === 'complete') {
+      void completeOccurrence(highlightId).finally(() => {
+        setSearchParams({}, { replace: true });
+      });
+    } else if (actionParam === 'snooze') {
+      void snoozeOccurrence(highlightId, '15m').finally(() => {
+        setSearchParams({}, { replace: true });
+      });
+    }
+  }, [actionParam, highlightId, setSearchParams]);
 
   async function enablePush() {
     setPushBusy(true);
@@ -196,6 +180,11 @@ export function HomePage() {
         body: JSON.stringify({ preset, customAt }),
       });
       applySnoozeLocally(id, result.snoozedUntil);
+      if (selectedOccurrence?.id === id) {
+        setSelectedOccurrence((prev) =>
+          prev ? { ...prev, status: 'snoozed', snoozedUntil: result.snoozedUntil } : prev
+        );
+      }
     } finally {
       setSnoozing(null);
     }
@@ -210,6 +199,10 @@ export function HomePage() {
         method: 'POST',
         token,
       });
+      if (selectedOccurrence?.id === id) {
+        setSelectedOccurrence(null);
+        setDeleteConfirm(false);
+      }
     } catch (err) {
       unmarkCompletedLocally(id);
       throw err;
@@ -218,55 +211,154 @@ export function HomePage() {
     }
   }
 
+  async function deleteSelectedOccurrence(scope: 'instance' | 'series') {
+    if (!selectedOccurrence) return;
+    setCompleting(selectedOccurrence.id);
+    try {
+      const token = await getIdToken();
+      if (scope === 'series') {
+        await apiFetch(`/api/tasks/${selectedOccurrence.templateId}`, {
+          method: 'DELETE',
+          token,
+        });
+      } else {
+        await apiFetch(`/api/occurrences/${selectedOccurrence.id}`, {
+          method: 'DELETE',
+          token,
+        });
+      }
+      markCompletedLocally(selectedOccurrence.id);
+      setSelectedOccurrence(null);
+      setDeleteConfirm(false);
+    } finally {
+      setCompleting(null);
+    }
+  }
+
+  const groups = groupOccurrences(occurrences);
+  const selectedTitle = selectedOccurrence
+    ? occurrenceTitle(selectedOccurrence, templates)
+    : '';
+
   return (
     <AppShell
-      title="Åbne nu"
+      eyebrow={formatTodayEyebrow()}
+      title="I dag"
+      hideHeader={false}
       actions={
-        <Button variant="secondary" onClick={() => void signOutUser()}>
-          Log ud
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/create"
+            className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-hyrm-accent text-[26px] font-bold leading-none text-hyrm-bg"
+            aria-label="Ny opgave"
+          >
+            +
+          </Link>
+          <button
+            type="button"
+            onClick={() => void signOutUser()}
+            className="flex min-h-11 min-w-11 items-center justify-end text-[12px] font-semibold text-hyrm-muted-dim"
+          >
+            Log ud
+          </button>
+        </div>
       }
     >
-      {needsInstall && (
-        <Banner tone="info">
-          På iPhone: Åbn i Safari → Del → Føj til hjemmeskærm → åbn appen derfra for at aktivere
-          push.
-        </Banner>
-      )}
-
-      <Card>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button disabled={pushBusy} onClick={() => void enablePush()}>
-            {pushBusy ? 'Aktiverer…' : 'Aktivér push'}
-          </Button>
-          <Link to="/create">
-            <Button variant="secondary">Ny opgave</Button>
-          </Link>
-        </div>
-        {pushMessage && <p className="mt-3 text-sm text-slate-300">{pushMessage}</p>}
-      </Card>
-
-      <PushHealthPanel dispatchHealth={dispatchHealth} pushState={pushState} />
+      <PushInstallHint visible={needsInstall} />
+      <PushStatusChip
+        dispatchHealth={dispatchHealth}
+        pushState={pushState}
+        onEnablePush={() => void enablePush()}
+        pushBusy={pushBusy}
+      />
+      <PushMessageBanner message={pushMessage} />
 
       {loading ? (
-        <p className="text-sm text-slate-400">Indlæser opgaver…</p>
+        <p className="text-sm text-hyrm-muted">Indlæser opgaver…</p>
       ) : occurrences.length === 0 ? (
-        <Card>
-          <p className="text-sm text-slate-400">Ingen åbne opgaver lige nu.</p>
-        </Card>
+        <EmptyState />
       ) : (
-        occurrences.map((occurrence) => (
-          <OccurrenceRow
-            key={occurrence.id}
-            occurrence={occurrence}
-            title={occurrenceTitle(occurrence, templates)}
-            highlighted={occurrence.id === highlightId}
-            onComplete={completeOccurrence}
-            onSnooze={snoozeOccurrence}
-            completing={completing}
-            snoozing={snoozing}
-          />
-        ))
+        <div className="space-y-4">
+          {groups.map((group) => (
+            <section key={group.section}>
+              <SectionHeader
+                label={group.label}
+                count={group.showCount ? group.items.length : undefined}
+                danger={group.section === 'overdue'}
+              />
+              {group.items.map((occurrence) => (
+                <TaskRow
+                  key={occurrence.id}
+                  occurrence={occurrence}
+                  title={occurrenceTitle(occurrence, templates)}
+                  template={templateById(occurrence.templateId)}
+                  overdue={group.section === 'overdue'}
+                  expanded={group.section === 'overdue'}
+                  highlighted={occurrence.id === highlightId}
+                  completing={completing === occurrence.id}
+                  snoozing={snoozing === occurrence.id}
+                  onOpen={() => setSelectedOccurrence(occurrence)}
+                  onComplete={() => void completeOccurrence(occurrence.id)}
+                  onSnooze={(preset, customAt) =>
+                    snoozeOccurrence(occurrence.id, preset, customAt)
+                  }
+                />
+              ))}
+            </section>
+          ))}
+        </div>
+      )}
+
+      <TaskDetailSheet
+        occurrence={selectedOccurrence}
+        title={selectedTitle}
+        template={
+          selectedOccurrence ? templateById(selectedOccurrence.templateId) : undefined
+        }
+        open={Boolean(selectedOccurrence) && !deleteConfirm}
+        busy={completing === selectedOccurrence?.id}
+        onClose={() => {
+          setSelectedOccurrence(null);
+          setDeleteConfirm(false);
+        }}
+        onComplete={() =>
+          selectedOccurrence && void completeOccurrence(selectedOccurrence.id)
+        }
+        onDelete={() => setDeleteConfirm(true)}
+      />
+
+      {deleteConfirm && selectedOccurrence && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[rgba(6,5,9,0.72)] p-4">
+          <div className="w-full max-w-lg rounded-[var(--radius-card)] bg-hyrm-sheet p-5">
+            <h3 className="font-display text-lg font-bold text-hyrm-text">Slet opgave?</h3>
+            <p className="mt-2 text-sm text-hyrm-muted">
+              Vælg om du vil slette kun denne forekomst eller hele serien.
+            </p>
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                className="h-11 w-full rounded-[var(--radius-btn)] bg-hyrm-elevated text-sm font-semibold text-hyrm-text"
+                onClick={() => void deleteSelectedOccurrence('instance')}
+              >
+                Slet denne
+              </button>
+              <button
+                type="button"
+                className="h-11 w-full rounded-[var(--radius-btn)] border border-hyrm-danger/40 text-sm font-semibold text-hyrm-danger"
+                onClick={() => void deleteSelectedOccurrence('series')}
+              >
+                Slet hele serien
+              </button>
+              <button
+                type="button"
+                className="h-11 w-full text-sm font-semibold text-hyrm-muted"
+                onClick={() => setDeleteConfirm(false)}
+              >
+                Annuller
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </AppShell>
   );

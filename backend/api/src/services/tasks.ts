@@ -209,3 +209,136 @@ export async function snoozeOccurrence(
 
   return { snoozedUntil };
 }
+
+export async function updateTask(
+  ownerId: string,
+  templateId: string,
+  body: CreateTaskRequest
+): Promise<{ template: RecurringTaskTemplate }> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskTemplates).doc(templateId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Task not found');
+  }
+  const existing = snap.data() as RecurringTaskTemplate;
+  if (existing.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+  if (existing.type !== 'recurring') {
+    throw new Error('Only recurring tasks can be updated');
+  }
+
+  const now = new Date().toISOString();
+  const phase = nagToReminderPhase(body.nag);
+  const updated: RecurringTaskTemplate = {
+    ...existing,
+    title: body.title.trim(),
+    description: body.description?.trim(),
+    schedule: body.schedule,
+    nag: body.nag,
+    reminderPhases: [phase],
+    group: body.group,
+    priority: body.priority ?? existing.priority,
+    revision: existing.revision + 1,
+    updatedAt: now,
+  };
+
+  await ref.set(updated);
+
+  const openOccurrences = await db
+    .collection(COLLECTIONS.taskOccurrences)
+    .where('templateId', '==', templateId)
+    .where('status', 'in', ['open', 'snoozed', 'overdue'])
+    .get();
+
+  const batch = db.batch();
+  for (const doc of openOccurrences.docs) {
+    batch.update(doc.ref, {
+      templateTitle: updated.title,
+      templateRevision: updated.revision,
+      updatedAt: now,
+    });
+  }
+  await batch.commit();
+  await materializeTemplate(updated);
+
+  return { template: updated };
+}
+
+export async function updateOccurrenceInstance(
+  ownerId: string,
+  occurrenceId: string,
+  body: CreateTaskRequest
+): Promise<void> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrenceId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Occurrence not found');
+  }
+  const data = snap.data() as TaskOccurrence;
+  if (data.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+
+  const now = new Date().toISOString();
+  await ref.update({
+    templateTitle: body.title.trim(),
+    scheduleSnapshot: { schedule: body.schedule, overrides: true },
+    reminderPlanSnapshot: { nag: body.nag, overrides: true },
+    updatedAt: now,
+  });
+}
+
+export async function deleteTaskSeries(ownerId: string, templateId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskTemplates).doc(templateId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Task not found');
+  }
+  const template = snap.data() as RecurringTaskTemplate | SingleTaskTemplate;
+  if (template.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+
+  const now = new Date().toISOString();
+  await ref.update({ active: false, updatedAt: now });
+
+  const openOccurrences = await db
+    .collection(COLLECTIONS.taskOccurrences)
+    .where('templateId', '==', templateId)
+    .where('status', 'in', ['open', 'snoozed', 'overdue'])
+    .get();
+
+  const batch = db.batch();
+  for (const doc of openOccurrences.docs) {
+    batch.update(doc.ref, {
+      status: 'cancelled',
+      nextReminderAt: FieldValue.delete(),
+      updatedAt: now,
+    });
+  }
+  await batch.commit();
+}
+
+export async function deleteOccurrence(ownerId: string, occurrenceId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrenceId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Occurrence not found');
+  }
+  const data = snap.data() as TaskOccurrence;
+  if (data.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+
+  const now = new Date().toISOString();
+  await ref.update({
+    status: 'cancelled',
+    nextReminderAt: FieldValue.delete(),
+    updatedAt: now,
+  });
+}

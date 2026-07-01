@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="da"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How You Remind Me — Dokumentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("88c5f3cb-e353-4816-bb03-9bd516ece54a") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("a7f31d9a-ac5d-4ab1-8837-069c1df45289") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("dc171db0-07ed-433c-8d81-1ecbf5545dc6") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("a1c9a125-d4df-46d6-ae88-40fb79a42f08") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("c1b6da44-66d6-40a3-abc9-92b21c38242d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("ea952e9d-135c-4116-8ba1-982155c5af7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("88c5f3cb-e353-4816-bb03-9bd516ece54a") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("a7f31d9a-ac5d-4ab1-8837-069c1df45289") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("dc171db0-07ed-433c-8d81-1ecbf5545dc6") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("a1c9a125-d4df-46d6-ae88-40fb79a42f08") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("c1b6da44-66d6-40a3-abc9-92b21c38242d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("ea952e9d-135c-4116-8ba1-982155c5af7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("88c5f3cb-e353-4816-bb03-9bd516ece54a") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("a7f31d9a-ac5d-4ab1-8837-069c1df45289") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("dc171db0-07ed-433c-8d81-1ecbf5545dc6") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("a1c9a125-d4df-46d6-ae88-40fb79a42f08") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("c1b6da44-66d6-40a3-abc9-92b21c38242d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("ea952e9d-135c-4116-8ba1-982155c5af7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("88c5f3cb-e353-4816-bb03-9bd516ece54a") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("a7f31d9a-ac5d-4ab1-8837-069c1df45289") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("dc171db0-07ed-433c-8d81-1ecbf5545dc6") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("a1c9a125-d4df-46d6-ae88-40fb79a42f08") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("c1b6da44-66d6-40a3-abc9-92b21c38242d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("ea952e9d-135c-4116-8ba1-982155c5af7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("88c5f3cb-e353-4816-bb03-9bd516ece54a") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("a7f31d9a-ac5d-4ab1-8837-069c1df45289") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("dc171db0-07ed-433c-8d81-1ecbf5545dc6") format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("a1c9a125-d4df-46d6-ae88-40fb79a42f08") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("c1b6da44-66d6-40a3-abc9-92b21c38242d") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("ea952e9d-135c-4116-8ba1-982155c5af7e") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("3b281320-ff32-49d1-a127-4e1adf6cf66f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("756f919d-1036-410b-98c7-744c82ae7953") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("6d2d2c45-e3fa-495f-aad9-cf11f893f018") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("3b281320-ff32-49d1-a127-4e1adf6cf66f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("756f919d-1036-410b-98c7-744c82ae7953") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("6d2d2c45-e3fa-495f-aad9-cf11f893f018") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("3b281320-ff32-49d1-a127-4e1adf6cf66f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("756f919d-1036-410b-98c7-744c82ae7953") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("6d2d2c45-e3fa-495f-aad9-cf11f893f018") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("3b281320-ff32-49d1-a127-4e1adf6cf66f") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("756f919d-1036-410b-98c7-744c82ae7953") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("6d2d2c45-e3fa-495f-aad9-cf11f893f018") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+  doc-page:not(:defined){visibility:hidden}
+  body{margin:0;background:#4a4640;font-family:Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  .kick{font:700 10.5px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;color:#ff8a4c}
+  .dh1{font:700 34px/1.05 'Space Grotesk';color:#16141c;margin:6px 0 0;letter-spacing:-.01em}
+  .dh2{font:700 22px/1.1 'Space Grotesk';color:#16141c;margin:0 0 6px}
+  .dh3{font:700 13.5px/1.2 Manrope;color:#16141c;margin:0 0 8px;letter-spacing:.01em}
+  .lead{font:400 14.5px/1.6 Manrope;color:#514c44;margin:10px 0 0}
+  p.body{font:400 13px/1.62 Manrope;color:#3c3833;margin:0 0 10px}
+  .rule{height:1px;background:#e4ddce;margin:34px 0}
+  .scr{display:flex;gap:30px;align-items:flex-start;break-inside:avoid;margin:0 0 30px}
+  .scopy{flex:1;min-width:0;padding-top:2px}
+  ul.spec{margin:12px 0 0;padding:0;list-style:none}
+  ul.spec li{font:400 12.5px/1.5 Manrope;color:#3c3833;padding:0 0 0 16px;position:relative;margin-bottom:7px}
+  ul.spec li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:#ff8a4c}
+  ul.spec li b{color:#16141c;font-weight:700}
+  .tokgrid{display:grid;grid-template-columns:1fr 1fr;gap:22px 30px;break-inside:avoid}
+  .swrow{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .swb{width:26px;height:26px;border-radius:7px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+  .swt{font:500 12px/1.3 Manrope;color:#3c3833}
+  .swt b{font:600 12px ui-monospace,Menlo,monospace;color:#16141c;display:block}
+  .card{border:1px solid #e4ddce;border-radius:12px;padding:16px 18px;background:#fdfbf6;break-inside:avoid;margin-bottom:14px}
+  .mono{font:12.5px/1.7 ui-monospace,Menlo,monospace;color:#2c2924;white-space:pre-wrap}
+  .flags{columns:2;column-gap:26px}
+  .flags div{font:400 12.5px/1.5 Manrope;color:#3c3833;break-inside:avoid;margin-bottom:5px}
+  .flags b{color:#16141c}
+  .copyrow{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid #eee6d7;break-inside:avoid}
+  .copyrow:last-child{border-bottom:none}
+  .copyk{flex:none;width:150px;font:700 12px Manrope;color:#16141c}
+  .copyv{flex:1;font:400 12.5px/1.5 Manrope;color:#3c3833}
+  .copyv em{color:#ff8a4c;font-style:normal;font-weight:600}
+  /* phone chrome */
+  .phone{width:298px;flex:none;background:#0b0b0e;border-radius:44px;padding:9px;box-shadow:0 20px 40px -18px rgba(0,0,0,.55)}
+  .screen{border-radius:36px;overflow:hidden;height:624px;position:relative;display:flex;flex-direction:column;background:#16141c;color:#f3efe9}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:82px;height:24px;background:#000;border-radius:18px;z-index:40}
+  .sb{display:flex;justify-content:space-between;align-items:center;padding:15px 24px 2px;font:700 13px Manrope;color:#f3efe9}
+  .bat{width:22px;height:11px;border-radius:3px;position:relative;box-shadow:inset 0 0 0 1.2px rgba(243,239,233,.5)}
+  .bat i{position:absolute;inset:2px;width:62%;border-radius:1.5px;background:#f3efe9;display:block}
+  .body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+  @media print{body{background:#fff}}
+</style>
+
+</head>
+<body>
+<doc-page size="letter" margin="0.62in">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 2px 11px;border-bottom:1px solid #e4ddce;font:600 10.5px Manrope;color:#8a857a;letter-spacing:.04em;margin-bottom:20px">
+    <span style="color:#ff8a4c;font-weight:700">HOW YOU REMIND ME</span><span>Designretningslinjer &amp; udviklerdokumentation · retning "Nat"</span>
+  </div>
+
+  <div class="kick">Designretningslinjer · v1</div>
+  <h1 class="dh1">How You Remind Me</h1>
+  <p class="lead">En privat reminder-app til én bruger, der bliver ved med at nagge dig, til opgaven er klaret. Dette dokument beskriver den valgte visuelle retning ("Nat"), designsystemet, hver skærm med specifikation, appens adfærd/logik, alle danske tekster og en foreslået datamodel — så det kan bygges direkte.</p>
+
+  <div class="rule"></div>
+
+  <!-- PRINCIPPER + TOKENS -->
+  <h2 class="dh2">1 · Fundament</h2>
+  <p class="body"><b>Princip:</b> ét klart signal ad gangen. Mørk, rolig flade så den orange accent kun bruges til det der kræver handling (forfaldne, primære knapper, aktiv tilstand). Store, læsbare rækker; alt teknisk er skjult som standard. Mobil-først (iPhone).</p>
+
+  <div class="tokgrid">
+    <div>
+      <div class="dh3">Farver</div>
+      <div class="swrow"><span class="swb" style="background:#16141c"></span><span class="swt">Baggrund<b>#16141C</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#221d2b"></span><span class="swt">Kort / flade<b>#221D2B</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#2a2533"></span><span class="swt">Forhøjet / ark<b>#2A2533 · #201C28</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#ff8a4c"></span><span class="swt">Accent (orange)<b>#FF8A4C</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#ff6b5e"></span><span class="swt">Forfalden / fare<b>#FF6B5E</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#4ad0a0"></span><span class="swt">Aktiv / OK<b>#4AD0A0</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#f3efe9"></span><span class="swt">Tekst primær<b>#F3EFE9</b></span></div>
+      <div class="swrow"><span class="swb" style="background:#9b93a6"></span><span class="swt">Tekst sekundær / svag<b>#9B93A6 · #645D70</b></span></div>
+    </div>
+    <div>
+      <div class="dh3">Typografi</div>
+      <p class="body"><b>Overskrifter:</b> Space Grotesk (600/700).<br><b>UI &amp; brødtekst:</b> Manrope (400–700).</p>
+      <ul class="spec">
+        <li>H1 27–34px · H2 22px · rækketitel 15px</li>
+        <li>Meta 12px · labels 11–12px · chip 10.5px</li>
+        <li>Eyebrow/labels: uppercase, letterspacing .06–.2em</li>
+      </ul>
+      <div class="dh3" style="margin-top:16px">Form &amp; rum</div>
+      <ul class="spec">
+        <li>Radius: kort/input 14–18 · knap 14–16 · pill 11 · ark-top 26 · chip 8</li>
+        <li>Checkbox = 22px cirkel (2px streg)</li>
+        <li>Touch-mål minimum <b>44px</b></li>
+        <li>Ikoner: tynde 2–3px streger, runde former · <b>↻</b> = gentagelse</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- KOMPONENTER -->
+  <h2 class="dh2">2 · Kernekomponenter</h2>
+  <ul class="spec" style="columns:2;column-gap:30px">
+    <li><b>Primær knap</b> — accent-fyld, tekst #16141C, 52px, radius 15</li>
+    <li><b>Sekundær knap</b> — flade #2A2533, lys tekst</li>
+    <li><b>Fare-knap</b> — transparent + 1px rgba(255,107,94,.4), tekst #FF6B5E</li>
+    <li><b>Valg-pill</b> — valgt: accent-fyld/mørk · ellers #221D2B/#C9C2D2</li>
+    <li><b>Opgave-række</b> — cirkel + titel + tid(højre) + meta + evt. nag-chip</li>
+    <li><b>Nag-chip</b> — accent-soft flade, accent tekst, prik: "Nagger hvert 15. min"</li>
+    <li><b>Status-chip</b> — grøn prik + "Push aktiv" + "Avanceret ›"</li>
+    <li><b>Sektionslabel</b> — uppercase; forfaldne i #FF6B5E m. antals-badge</li>
+  </ul>
+
+  <div class="rule"></div>
+
+  <!-- SKÆRME -->
+  <h2 class="dh2" style="margin-bottom:20px">3 · Skærme</h2>
+
+  <!-- LOGIN -->
+  <div class="scr">
+    <div class="phone"><div class="screen"><div class="island"></div>
+      <div class="sb"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><div style="width:17px;height:11px;border-radius:2px;background:#f3efe9;opacity:.9"></div><span class="bat"><i></i></span></div></div>
+      <div class="body" style="padding:0 28px;justify-content:center">
+        <div style="width:60px;height:60px;border-radius:20px;background:linear-gradient(150deg,#ff8a4c,#ff6b5e);box-shadow:0 12px 30px -8px rgba(255,138,76,.6);display:flex;align-items:center;justify-content:center;margin-bottom:26px"><div style="width:20px;height:20px;border:3px solid #16141c;border-radius:50%;position:relative"><div style="position:absolute;top:-9px;left:5px;width:3px;height:8px;background:#16141c;border-radius:2px"></div></div></div>
+        <div style="font:600 11px/1 Space Grotesk;letter-spacing:.22em;color:#ff8a4c;text-transform:uppercase">How you remind me</div>
+        <h1 style="font:700 34px/1.05 Space Grotesk;margin:12px 0 14px">Så du husker det.</h1>
+        <p style="font:400 14.5px/1.55 Manrope;color:#9b93a6;margin:0 0 34px">Privat reminder-app til én bruger. Den nagger dig igen og igen — til opgaven er klaret.</p>
+        <button style="width:100%;height:54px;border:none;border-radius:16px;background:#f3efe9;color:#16141c;font:700 15px Manrope;display:flex;align-items:center;justify-content:center;gap:10px"><span style="width:20px;height:20px;border-radius:50%;background:conic-gradient(#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0 100%)"></span>Log ind med Google</button>
+        <p style="font:400 12px/1.5 Manrope;color:#645d70;text-align:center;margin:18px 0 0">Kun dig. Ingen konti, ingen deling.</p>
+      </div>
+    </div></div>
+    <div class="scopy">
+      <div class="kick">Skærm 01</div>
+      <h2 class="dh2">Login</h2>
+      <p class="body">Ét formål: log ind. Centreret, roligt, uden støj. Google er eneste metode (privat app til én bruger).</p>
+      <ul class="spec">
+        <li>Brandmærke (orange rundet firkant + klokke-glyph) som fast identitet</li>
+        <li>Google-knap er lys/hvid for at skille sig ud på mørk flade</li>
+        <li>Ingen felter, ingen "opret konto" — kun OAuth</li>
+        <li>Efter login → <b>Overblik</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- OVERBLIK -->
+  <div class="scr">
+    <div class="phone"><div class="screen"><div class="island"></div>
+      <div class="sb"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><div style="width:17px;height:11px;border-radius:2px;background:#f3efe9;opacity:.9"></div><span class="bat"><i></i></span></div></div>
+      <div class="body">
+        <div style="padding:12px 22px 10px;display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font:600 10px/1 Space Grotesk;letter-spacing:.2em;color:#ff8a4c;text-transform:uppercase">Onsdag 1. juli</div><h1 style="font:700 27px/1 Space Grotesk;margin:8px 0 0">I dag</h1></div><div style="width:44px;height:44px;border-radius:14px;background:#ff8a4c;color:#16141c;font:700 26px/1 Manrope;display:flex;align-items:center;justify-content:center">+</div></div>
+        <div style="margin:0 22px 6px;display:flex;align-items:center;gap:8px;padding:9px 13px;background:#221d2b;border-radius:12px;font:600 12px Manrope;color:#9b93a6"><span style="width:7px;height:7px;border-radius:50%;background:#4ad0a0"></span>Push aktiv<span style="margin-left:auto;color:#645d70;font-weight:600">Avanceret ›</span></div>
+        <div style="flex:1;overflow:hidden;padding:8px 22px 20px">
+          <div style="font:700 11px/1 Manrope;letter-spacing:.06em;text-transform:uppercase;color:#ff6b5e;margin:8px 0 9px;display:flex;align-items:center;gap:7px">Forfaldne <span style="background:#ff6b5e;color:#16141c;border-radius:20px;font-size:10px;padding:1px 7px">1</span></div>
+          <div style="background:#2a1d22;border:1px solid rgba(255,107,94,.35);border-radius:18px;padding:14px 15px;margin-bottom:16px">
+            <div style="display:flex;gap:12px;align-items:flex-start"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #ff6b5e;flex:none;margin-top:1px"></div><div style="flex:1"><div style="font:600 15px Manrope">Ring til tandlægen</div><div style="font:500 12px Manrope;color:#ff6b5e;margin-top:4px">45 min forsinket · én gang</div><div style="margin-top:7px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;background:rgba(255,138,76,.16);color:#ff8a4c;font:600 10.5px Manrope"><span style="width:5px;height:5px;border-radius:50%;background:#ff8a4c"></span>Nagger hvert 15. min</span></div></div></div>
+            <button style="width:100%;height:40px;border:none;border-radius:11px;background:#ff8a4c;color:#16141c;font:700 13px Manrope;margin-top:12px">Klaret</button>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:8px"><span style="font:600 11px Manrope;color:#9b93a6;flex:none">Udsæt</span><div style="flex:1;text-align:center;padding:6px 0;border-radius:9px;background:#221d2b;color:#c9c2d2;font:600 11px Manrope">15 min</div><div style="flex:1;text-align:center;padding:6px 0;border-radius:9px;background:#221d2b;color:#c9c2d2;font:600 11px Manrope">1 time</div><div style="flex:1;text-align:center;padding:6px 0;border-radius:9px;background:#221d2b;color:#c9c2d2;font:600 11px Manrope">1 dag</div><div style="flex:1;text-align:center;padding:6px 0;border-radius:9px;background:#221d2b;color:#c9c2d2;font:600 11px Manrope">Vælg</div></div>
+          </div>
+          <div style="font:700 11px/1 Manrope;letter-spacing:.06em;text-transform:uppercase;color:#645d70;margin:0 0 6px">Senere i dag</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #4a4356;flex:none;margin-top:1px"></div><div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font:600 15px Manrope">Tag medicin</span><span style="font:700 13px Manrope;color:#c9c2d2">21.00</span></div><div style="font:500 12px Manrope;color:#9b93a6;margin-top:3px">↻ Dagligt</div><div style="margin-top:7px"><span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:8px;background:rgba(255,138,76,.14);color:#ff8a4c;font:600 10.5px Manrope"><span style="width:5px;height:5px;border-radius:50%;background:#ff8a4c"></span>Nagger hvert 15. min</span></div></div></div>
+          <div style="height:1px;background:rgba(255,255,255,.06)"></div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #4a4356;flex:none;margin-top:1px"></div><div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font:600 15px Manrope">Hent børn</span><span style="font:700 13px Manrope;color:#c9c2d2">15.30</span></div><div style="font:500 12px Manrope;color:#9b93a6;margin-top:3px">Én gang · kl. 15.30</div></div></div>
+          <div style="font:700 11px/1 Manrope;letter-spacing:.06em;text-transform:uppercase;color:#645d70;margin:14px 0 6px">I morgen</div>
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #4a4356;flex:none;margin-top:1px"></div><div style="flex:1"><div style="display:flex;justify-content:space-between"><span style="font:600 15px Manrope">Betal husleje</span><span style="font:700 13px Manrope;color:#c9c2d2">07.15</span></div><div style="font:500 12px Manrope;color:#9b93a6;margin-top:3px">↻ Månedligt · d. 1.</div></div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="scopy">
+      <div class="kick">Skærm 02 · hjerte i appen</div>
+      <h2 class="dh2">Overblik · "I dag"</h2>
+      <p class="body">Løser den gamle apps problem med mange påmindelser. Rækkerne er prioriteret og grupperet, så det vigtigste altid står øverst.</p>
+      <ul class="spec">
+        <li><b>Rækkefølge:</b> (1) <b>Forfaldne</b> øverst i egen rød sektion m. antal · (2) grupperet efter tid: <b>Senere i dag → I morgen → Senere/dato</b></li>
+        <li>Inden for en gruppe: sorteret på tidspunkt stigende</li>
+        <li><b>Rækkeanatomi:</b> checkbox · titel · tidspunkt (højre) · meta-linje · evt. nag-chip</li>
+        <li><b>Gentagelse</b> vises med <b>↻</b> + kadence ("↻ Dagligt", "↻ Månedligt · d. 1.")</li>
+        <li><b>Nag</b> vises som separat chip ("Nagger hvert 15. min") — aldrig blandet sammen med gentagelsen</li>
+        <li>Forfalden række har handlinger inline: <b>Klaret</b> + <b>Udsæt</b> 15 min / 1 time / 1 dag / Vælg</li>
+        <li>Push-status er ét grønt chip; alt teknisk ligger bag <b>Avanceret ›</b></li>
+        <li><b>+</b> øverst → Ny opgave · tryk på række → detalje</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DETALJE OVERLAY -->
+  <div class="scr">
+    <div class="phone"><div class="screen"><div class="island"></div>
+      <div class="sb"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><div style="width:17px;height:11px;border-radius:2px;background:#f3efe9;opacity:.9"></div><span class="bat"><i></i></span></div></div>
+      <div class="body" style="justify-content:flex-end;position:relative">
+        <div style="position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;filter:brightness(.55)"><div style="padding:12px 22px 10px;display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font:600 10px/1 Space Grotesk;letter-spacing:.2em;color:#ff8a4c;text-transform:uppercase">Onsdag 1. juli</div><h1 style="font:700 27px/1 Space Grotesk;margin:8px 0 0;color:#f3efe9">I dag</h1></div><div style="width:44px;height:44px;border-radius:14px;background:#ff8a4c;color:#16141c;font:700 26px/1 Manrope;display:flex;align-items:center;justify-content:center">+</div></div><div style="margin:0 22px;padding:10px 22px"><div style="display:flex;gap:12px;align-items:flex-start;padding:6px 0"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #4a4356;flex:none;margin-top:1px"></div><div style="flex:1"><div style="display:flex;justify-content:space-between;color:#f3efe9"><span style="font:600 15px Manrope">Tag medicin</span><span style="font:700 13px Manrope;color:#c9c2d2">21.00</span></div><div style="font:500 12px Manrope;color:#9b93a6;margin-top:3px">↻ Dagligt</div></div></div></div></div>
+        <div style="position:absolute;inset:0;z-index:1;background:rgba(6,5,9,.62)"></div>
+        <div style="position:relative;z-index:2;background:#201c28;border-top-left-radius:26px;border-top-right-radius:26px;padding:12px 22px 22px;box-shadow:0 -20px 40px -20px rgba(0,0,0,.7)">
+          <div style="width:38px;height:4px;border-radius:3px;background:#4a4356;margin:0 auto 18px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><h2 style="font:700 22px/1 Space Grotesk;margin:0">Tag medicin</h2><span style="padding:4px 11px;border-radius:20px;background:rgba(74,208,160,.15);color:#4ad0a0;font:700 11px Manrope">Åben</span></div>
+          <div><div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="font:500 13px Manrope;color:#9b93a6">Gentagelse</span><span style="font:600 13px Manrope">↻ Dagligt</span></div>
+          <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="font:500 13px Manrope;color:#9b93a6">Tidspunkt</span><span style="font:600 13px Manrope">21.00</span></div>
+          <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="font:500 13px Manrope;color:#9b93a6">Nag</span><span style="font:600 13px Manrope;color:#ff8a4c">Hvert 15. min</span></div>
+          <div style="display:flex;justify-content:space-between;padding:11px 0"><span style="font:500 13px Manrope;color:#9b93a6">Næste</span><span style="font:600 13px Manrope">I dag 21.00</span></div></div>
+          <button style="width:100%;height:50px;border:none;border-radius:14px;background:#ff8a4c;color:#16141c;font:700 15px Manrope;margin-top:16px">Marker som klaret</button>
+          <div style="display:flex;gap:9px;margin-top:9px"><div style="flex:1;text-align:center;padding:13px 0;border-radius:14px;background:#2a2533;color:#f3efe9;font:600 14px Manrope">Redigér</div><div style="flex:1;text-align:center;padding:13px 0;border-radius:14px;background:transparent;border:1px solid rgba(255,107,94,.4);color:#ff6b5e;font:600 14px Manrope">Slet</div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="scopy">
+      <div class="kick">Skærm 03</div>
+      <h2 class="dh2">Opgave · detalje</h2>
+      <p class="body">Åbner som <b>bund-ark oven på overblikket</b> (samme skærm dæmpes bagved — man mister ikke konteksten). Alternativt kan det være en fuld side; det må ikke være en fremmed baggrund.</p>
+      <ul class="spec">
+        <li>Viser alle felter: gentagelse, tidspunkt, nag, næste påmindelse, status</li>
+        <li>Primær handling <b>Marker som klaret</b></li>
+        <li><b>Redigér</b> (sekundær) og <b>Slet</b> (fare) side om side</li>
+        <li>Status-badge: Åben (grøn) / Klaret / Forsinket (rød)</li>
+        <li>Luk ved swipe ned eller tap uden for arket</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- NY / REDIGÉR -->
+  <div class="scr">
+    <div class="phone"><div class="screen"><div class="island"></div>
+      <div class="sb"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><div style="width:17px;height:11px;border-radius:2px;background:#f3efe9;opacity:.9"></div><span class="bat"><i></i></span></div></div>
+      <div class="body">
+        <div style="padding:12px 22px 6px;display:flex;justify-content:space-between;align-items:center"><h1 style="font:700 24px/1 Space Grotesk;margin:0">Redigér opgave</h1><span style="font:600 13px Manrope;color:#9b93a6">Annuller</span></div>
+        <div style="flex:1;overflow:hidden;padding:10px 22px 16px">
+          <div style="background:#221d2b;border-radius:14px;padding:12px 13px;margin-bottom:16px"><div style="font:600 11px Manrope;color:#9b93a6;margin-bottom:9px">Ændringer gælder</div><div style="display:flex;gap:6px;background:#16141c;border-radius:11px;padding:4px"><div style="flex:1;text-align:center;padding:8px 0;border-radius:8px;background:#2a2533;color:#c9c2d2;font:600 12.5px Manrope">Kun denne gang</div><div style="flex:1;text-align:center;padding:8px 0;border-radius:8px;background:#ff8a4c;color:#16141c;font:700 12.5px Manrope">Hele serien</div></div></div>
+          <label style="font:600 12px Manrope;color:#9b93a6">Hvad skal huskes?</label>
+          <div style="margin-top:8px;height:50px;border-radius:14px;background:#221d2b;border:1px solid rgba(255,138,76,.5);display:flex;align-items:center;padding:0 15px;font:600 15px Manrope;margin-bottom:16px">Tag medicin</div>
+          <label style="font:600 12px Manrope;color:#9b93a6">Gentagelse</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px"><span style="padding:9px 14px;border-radius:11px;background:#ff8a4c;color:#16141c;font:700 12.5px Manrope">↻ Dagligt</span><span style="padding:9px 14px;border-radius:11px;background:#221d2b;color:#c9c2d2;font:600 12.5px Manrope">Én gang</span><span style="padding:9px 14px;border-radius:11px;background:#221d2b;color:#c9c2d2;font:600 12.5px Manrope">Ugentlig</span></div>
+          <label style="font:600 12px Manrope;color:#9b93a6">Nag <span style="color:#645d70;font-weight:500">(mens opgaven er åben)</span></label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px"><span style="padding:9px 14px;border-radius:11px;background:#221d2b;border:1px solid rgba(255,138,76,.5);color:#ff8a4c;font:700 12.5px Manrope">Hvert 15. min</span><span style="padding:9px 14px;border-radius:11px;background:#221d2b;color:#c9c2d2;font:600 12.5px Manrope">Hver time</span><span style="padding:9px 14px;border-radius:11px;background:#221d2b;color:#c9c2d2;font:600 12.5px Manrope">Kun én gang</span></div>
+          <button style="width:100%;height:50px;border:none;border-radius:15px;background:#ff8a4c;color:#16141c;font:700 15px Manrope;margin-bottom:10px">Gem ændringer</button>
+          <button style="width:100%;height:46px;border:1px solid rgba(255,107,94,.4);border-radius:15px;background:transparent;color:#ff6b5e;font:700 14px Manrope">Slet hele serien</button>
+        </div>
+      </div>
+    </div></div>
+    <div class="scopy">
+      <div class="kick">Skærm 04</div>
+      <h2 class="dh2">Ny / Redigér opgave</h2>
+      <p class="body">Samme formular til begge. To adskilte begreber — hold dem visuelt adskilt: <b>Gentagelse</b> (hvornår opgaven kommer igen) og <b>Nag</b> (rytmen mens den er åben).</p>
+      <ul class="spec">
+        <li><b>Felter:</b> titel · Gentagelse (Én gang / Dagligt / Ugentlig / Bestemte ugedage / Månedligt) · Nag (Hvert 15. min / Hver time / Kun én gang) · Startdato + tidspunkt (kvarter) · Slutdato (valgfri deadline)</li>
+        <li><b>Redigér gentagen opgave:</b> "Ændringer gælder: Kun denne gang / Hele serien" står øverst. <b>Ny opgave skjuler denne vælger</b> (ingen serie endnu)</li>
+        <li>Slet-knap respekterer samme valg → "Slet hele serien" / "Slet denne"</li>
+        <li>Gem-knap hedder "Gem opgave" (ny) / "Gem ændringer" (redigér)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- NOTIFIKATION + TOM -->
+  <div class="scr">
+    <div class="phone"><div class="screen" style="background:radial-gradient(120% 90% at 50% 0%,#2a2233 0%,#100e15 70%)"><div class="island"></div>
+      <div class="sb"><span>9:41</span><div style="display:flex;gap:5px;align-items:center"><div style="width:17px;height:11px;border-radius:2px;background:#f3efe9;opacity:.9"></div><span class="bat"><i></i></span></div></div>
+      <div class="body" style="padding:0 16px">
+        <div style="text-align:center;margin-top:36px"><div style="font:500 15px Manrope;color:#c9c2d2">torsdag 2. juli</div><div style="font:300 78px/1 Space Grotesk;letter-spacing:-.02em">07.15</div></div>
+        <div style="margin-top:auto;margin-bottom:20px;background:rgba(40,34,50,.72);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:15px">
+          <div style="display:flex;gap:11px;align-items:center;margin-bottom:11px"><div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(150deg,#ff8a4c,#ff6b5e);flex:none;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;border:2.5px solid #16141c;border-radius:50%;position:relative"><div style="position:absolute;top:-6px;left:3.5px;width:2px;height:5px;background:#16141c;border-radius:2px"></div></div></div><div style="flex:1"><div style="font:700 12px Manrope">HOW YOU REMIND ME</div><div style="font:500 11px Manrope;color:#9b93a6">nu</div></div></div>
+          <div style="font:700 16px Manrope;margin-bottom:3px">Betal husleje</div>
+          <div style="font:400 13px/1.4 Manrope;color:#c9c2d2;margin-bottom:13px">Jeg nagger hver time, til du markerer den som klaret.</div>
+          <div style="display:flex;gap:9px"><div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:#ff8a4c;color:#16141c;font:700 13px Manrope">Klaret</div><div style="flex:1;text-align:center;padding:11px 0;border-radius:12px;background:rgba(255,255,255,.1);color:#f3efe9;font:600 13px Manrope">Udsæt 15 min</div></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="scopy">
+      <div class="kick">Skærm 05</div>
+      <h2 class="dh2">Notifikation</h2>
+      <p class="body">Sådan ser en påmindelse ud på låseskærmen når den udløser. Personligheden ("nagger") lever her.</p>
+      <ul class="spec">
+        <li>Titel = opgavens navn · body forklarer nag-rytmen</li>
+        <li>To handlinger direkte fra notifikationen: <b>Klaret</b> og <b>Udsæt 15 min</b></li>
+        <li>Gentages efter nag-intervallet indtil Klaret</li>
+        <li>Kræver PWA installeret på hjemmeskærm på iPhone (se Push-status)</li>
+      </ul>
+      <div style="height:22px"></div>
+      <div class="kick">Skærm 06</div>
+      <h2 class="dh2">Tom tilstand</h2>
+      <p class="body">Når alt er klaret. Belønnende, ikke tomt. Stribet cirkel-placeholder + klokke, "Alt er klaret", og én tydelig CTA <b>Ny opgave</b>. Copy: "Ingen påmindelser lige nu. Tilføj en, så holder jeg øje og nagger dig, til den er klaret."</p>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- ADFÆRD -->
+  <h2 class="dh2">4 · Adfærd &amp; logik</h2>
+  <div class="card">
+    <div class="dh3">Nag (påmindelsesrytme)</div>
+    <p class="body" style="margin:0">Mens en opgave er <b>åben</b>, sender appen gentagne notifikationer med det valgte interval: <b>Hvert 15. min</b>, <b>Hver time</b> eller <b>Kun én gang</b>. Nagging stopper i det øjeblik opgaven markeres <b>Klaret</b>. Verbet skrives i nutid på dansk: "nagger".</p>
+  </div>
+  <div class="card">
+    <div class="dh3">Gentagelse vs. instanser</div>
+    <p class="body" style="margin:0">En gentagen opgave (Dagligt/Ugentlig/Ugedage/Månedligt) er en <b>serie</b>. Hver forekomst er en <b>instans</b> med egen status. <b>Klaret</b> lukker kun dagens instans; næste dukker op ved næste forekomst. I overblikket markeres serier med <b>↻</b> + kadence.</p>
+  </div>
+  <div class="card">
+    <div class="dh3">Redigér &amp; slet</div>
+    <p class="body" style="margin:0">Ved redigering/sletning af en instans i en serie spørges: <b>Kun denne gang</b> eller <b>Hele serien</b>. "Kun denne gang" laver en undtagelse på instansen; "Hele serien" ændrer skabelonen fremadrettet. Engangsopgaver springer valget over.</p>
+  </div>
+  <div class="card">
+    <div class="dh3">Forfaldne &amp; snooze</div>
+    <p class="body" style="margin:0">Forfalden = planlagt tid passeret og status åben. Vises øverst i rød sektion med "X min/timer forsinket". Handlinger: <b>Klaret</b> + <b>Udsæt</b> 15 min / 1 time / 1 dag / <b>Vælg</b> (custom dato+tid). Udsæt flytter kun næste påmindelse — den rører ikke serien.</p>
+  </div>
+  <div class="card">
+    <div class="dh3">Push-status (skjult bag "Avanceret")</div>
+    <p class="body">Standard er ét grønt <b>Push aktiv</b>-chip. Den tekniske boks fra den gamle app flyttes ind under <b>Avanceret ›</b> og er foldet sammen som udgangspunkt:</p>
+    <div class="flags">
+      <div><b>Notification.permission</b> — default/granted/denied</div>
+      <div><b>PushManager permission</b> — prompt/granted</div>
+      <div><b>Subscription</b> — aktiv/mangler</div>
+      <div><b>Service worker</b> — aktiv</div>
+      <div><b>PWA standalone</b> — ja/nej</div>
+      <div><b>Seneste dispatch</b> — tidsstempel</div>
+      <div><b>Åbne uden enhed</b> — antal</div>
+      <div><b>E-mail backup</b> — konfigureret?</div>
+    </div>
+    <p class="body" style="margin:10px 0 0">Hvis PWA ikke er installeret på iPhone, vis hint: "Åbn i Safari → Del → Føj til hjemmeskærm → åbn appen derfra for at aktivere push."</p>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- COPY -->
+  <h2 class="dh2">5 · Tekster (dansk)</h2>
+  <div class="card">
+    <div class="copyrow"><div class="copyk">Verbet</div><div class="copyv">"at nagge" i nutid: <em>Nagger hvert 15. min</em>, <em>Jeg nagger hver time, til du markerer den som klaret.</em></div></div>
+    <div class="copyrow"><div class="copyk">Login</div><div class="copyv">Eyebrow: HOW YOU REMIND ME · H1: "Så du husker det." · "Privat reminder-app til én bruger. Den nagger dig igen og igen — til opgaven er klaret." · "Log ind med Google" · "Kun dig. Ingen konti, ingen deling."</div></div>
+    <div class="copyrow"><div class="copyk">Overblik</div><div class="copyv">Sektioner: Forfaldne · Senere i dag · I morgen · Senere. Chip: "Push aktiv" + "Avanceret ›". Meta: "45 min forsinket", "↻ Dagligt", "Én gang · kl. 15.30".</div></div>
+    <div class="copyrow"><div class="copyk">Handlinger</div><div class="copyv">Klaret · Udsæt (15 min / 1 time / 1 dag / Vælg) · Marker som klaret · Redigér · Slet</div></div>
+    <div class="copyrow"><div class="copyk">Formular</div><div class="copyv">"Hvad skal huskes?" · Gentagelse · "Nag (mens opgaven er åben)" · Start · Slutdato (valgfri — fx deadline) · Gem opgave / Gem ændringer · Annuller</div></div>
+    <div class="copyrow"><div class="copyk">Notifikation</div><div class="copyv">Titel = opgavenavn · body: "Jeg nagger hver time, til du markerer den som klaret." · Klaret / Udsæt 15 min</div></div>
+    <div class="copyrow"><div class="copyk">Tom tilstand</div><div class="copyv">"Alt er klaret" · "Ingen påmindelser lige nu. Tilføj en, så holder jeg øje og nagger dig, til den er klaret." · CTA "Ny opgave"</div></div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- DATAMODEL -->
+  <h2 class="dh2">6 · Foreslået datamodel</h2>
+  <p class="body">Til inspiration — tilpas til din stack. En opgave (serie-skabelon) + beregnede instanser:</p>
+  <div class="card"><div class="mono">Task {
+  id:            string
+  title:         string
+  recurrence:    "once" | "daily" | "weekly" | "weekdays" | "monthly"
+  weekdays?:     number[]        // ved "weekdays", 0–6
+  monthDay?:     number          // ved "monthly", 1–31
+  time:          "HH:MM"         // kvarter-præcision
+  startDate:     date
+  endDate?:      date            // valgfri deadline
+  nag:           "q15" | "hourly" | "once"   // rytme mens åben
+}
+
+TaskInstance {
+  taskId:        string
+  date:          date
+  status:        "open" | "done"
+  snoozedUntil?: timestamp       // sat af Udsæt
+  nextFireAt:    timestamp       // beregnet: max(planlagt, snoozedUntil)
+  overrides?:    Partial&lt;Task&gt; // ved "kun denne gang"
+}</div></div>
+  <p class="body" style="color:#8a857a;font-size:12px;margin-top:8px">Sortering i overblik: forfaldne (nextFireAt &lt; nu &amp;&amp; open) først, derefter grupperet på date og sorteret på time.</p>
+
+</doc-page>
+<script src="d1a67b1a-0373-406b-a5a5-7c4a3328a538"></script>
+
+</body></html>

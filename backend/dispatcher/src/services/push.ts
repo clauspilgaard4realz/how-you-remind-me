@@ -1,5 +1,6 @@
 import webPush from 'web-push';
-import type { PushDevice, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
+import type { NagCadence, PushDevice, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
+import { resolveTemplateNag } from '@hyrm/shared';
 
 let configured = false;
 
@@ -49,13 +50,27 @@ export async function sendPushToDevices(
   );
 }
 
+function nagBodyText(cadence: NagCadence): string {
+  switch (cadence) {
+    case '15m':
+      return 'Jeg nagger hvert 15. min, til du markerer den som klaret.';
+    case '1h':
+      return 'Jeg nagger hver time, til du markerer den som klaret.';
+    case 'daily':
+      return 'Påmindelse — marker den som klaret, når du er færdig.';
+    default:
+      return 'Påmindelse — tryk for at åbne';
+  }
+}
+
 export function buildPushPayload(
   occurrence: TaskOccurrence,
   template: TaskTemplate
 ): { title: string; body: string; tag: string; url: string; occurrenceId: string } {
+  const nag = resolveTemplateNag(template);
   return {
     title: template.title,
-    body: 'Påmindelse — tryk for at åbne',
+    body: nagBodyText(nag.cadence),
     tag: occurrence.id,
     url: `/?occurrence=${occurrence.id}`,
     occurrenceId: occurrence.id,

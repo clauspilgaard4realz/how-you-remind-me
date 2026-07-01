@@ -30,6 +30,15 @@ async function notifyClients(payload: PushPayload, title: string, body: string):
   }
 }
 
+function targetUrl(payload: PushPayload, action?: string): string {
+  const base = payload.url ?? '/';
+  if (!payload.occurrenceId) return base;
+  const params = new URLSearchParams({ occurrence: payload.occurrenceId });
+  if (action === 'complete') params.set('action', 'complete');
+  if (action === 'snooze') params.set('action', 'snooze');
+  return `/?${params.toString()}`;
+}
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -41,17 +50,20 @@ self.addEventListener('push', (event) => {
   }
 
   const title = payload.title ?? 'How You Remind Me';
-  const body = payload.body ?? 'Du har en reminder';
-  const options: NotificationOptions = {
+  const body = payload.body ?? 'Du har en påmindelse';
+  const options = {
     body,
     tag: payload.tag ?? payload.occurrenceId,
     data: {
       url: payload.url ?? '/',
       occurrenceId: payload.occurrenceId,
     },
-  };
+    actions: [
+      { action: 'complete', title: 'Klaret' },
+      { action: 'snooze', title: 'Udsæt 15 min' },
+    ],
+  } as NotificationOptions;
 
-  // Apple: vis notifikation med det samme i SW — ellers kan tilladelse tilbagekaldes.
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(title, options),
@@ -63,7 +75,12 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data as { url?: string; occurrenceId?: string } | undefined;
-  const targetUrl = data?.occurrenceId ? `/?occurrence=${data.occurrenceId}` : data?.url ?? '/';
+  const action = event.action;
+  const payload: PushPayload = {
+    url: data?.url,
+    occurrenceId: data?.occurrenceId,
+  };
+  const navigateTo = targetUrl(payload, action || undefined);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -71,13 +88,13 @@ self.addEventListener('notificationclick', (event) => {
         if ('focus' in client) {
           void client.focus();
           if ('navigate' in client && typeof client.navigate === 'function') {
-            void client.navigate(targetUrl);
+            void client.navigate(navigateTo);
           }
           return;
         }
       }
       if (self.clients.openWindow) {
-        void self.clients.openWindow(targetUrl);
+        void self.clients.openWindow(navigateTo);
       }
     })
   );

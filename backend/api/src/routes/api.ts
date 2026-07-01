@@ -6,8 +6,12 @@ import {
   completeOccurrence,
   createSingleTask,
   createTask,
+  deleteOccurrence,
+  deleteTaskSeries,
   registerPushDevice,
   snoozeOccurrence,
+  updateOccurrenceInstance,
+  updateTask,
 } from '../services/tasks.js';
 
 export const apiRouter = Router();
@@ -41,6 +45,74 @@ apiRouter.post('/tasks', async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : 'Create failed' });
+  }
+});
+
+apiRouter.put('/tasks/:id', async (req, res) => {
+  const validationError = validateCreateTask(req.body);
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+
+  try {
+    const result = await updateTask(req.user!.uid, req.params.id, req.body);
+    res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Update failed';
+    const status =
+      message === 'Task not found' ? 404 : message === 'Forbidden' ? 403 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+apiRouter.delete('/tasks/:id', async (req, res) => {
+  try {
+    await deleteTaskSeries(req.user!.uid, req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Delete failed';
+    const status =
+      message === 'Task not found' ? 404 : message === 'Forbidden' ? 403 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+apiRouter.put('/occurrences/:id', async (req, res) => {
+  const validationError = validateCreateTask(req.body);
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+
+  try {
+    await updateOccurrenceInstance(req.user!.uid, req.params.id, req.body);
+    res.status(204).send();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Update failed';
+    const status =
+      message === 'Occurrence not found'
+        ? 404
+        : message === 'Forbidden'
+          ? 403
+          : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+apiRouter.delete('/occurrences/:id', async (req, res) => {
+  try {
+    await deleteOccurrence(req.user!.uid, req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Delete failed';
+    const status =
+      message === 'Occurrence not found'
+        ? 404
+        : message === 'Forbidden'
+          ? 403
+          : 500;
+    res.status(status).json({ error: message });
   }
 });
 

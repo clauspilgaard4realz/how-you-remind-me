@@ -7,22 +7,23 @@ import {
   quarterTimeOptions,
 } from '../lib/time';
 import { isSnoozeExpired } from '../lib/occurrence';
-import { Button } from './ui';
 
 const PRESETS: { preset: SnoozePreset; label: string }[] = [
   { preset: '15m', label: '15 min' },
   { preset: '1h', label: '1 time' },
-  { preset: 'tomorrow', label: 'I morgen kl. 09' },
+  { preset: 'tomorrow', label: '1 dag' },
 ];
 
 export function SnoozeControls({
   occurrence,
   busy,
   onSnooze,
+  compact,
 }: {
   occurrence: TaskOccurrence;
   busy: boolean;
   onSnooze: (preset: SnoozePreset, customAt?: string) => Promise<void>;
+  compact?: boolean;
 }) {
   const [showCustom, setShowCustom] = useState(false);
   const defaults = defaultReminderStart();
@@ -54,58 +55,51 @@ export function SnoozeControls({
     occurrence.status === 'snoozed' &&
     occurrence.snoozedUntil &&
     !isSnoozeExpired(occurrence.snoozedUntil);
-  const snoozeExpired =
-    occurrence.status === 'snoozed' &&
-    occurrence.snoozedUntil &&
-    isSnoozeExpired(occurrence.snoozedUntil);
 
   return (
-    <div className="mt-3 space-y-2 border-t border-slate-800 pt-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Påmind mig</p>
-      {snoozeActive && (
-        <p className="text-sm text-sky-300">
+    <div className={compact ? 'mt-3' : 'mt-3 space-y-2 border-t border-white/6 pt-3'}>
+      {!compact && snoozeActive && (
+        <p className="text-sm text-hyrm-accent">
           Udsat til {formatLocalDateTime(occurrence.snoozedUntil!)}
         </p>
       )}
-      {snoozeExpired && (
-        <p className="text-sm text-amber-300">
-          Snooze udløbet — næste påmindelse ved næste dispatch-slot
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center gap-1.5">
+        <span className="flex-none text-[11px] font-semibold text-hyrm-muted">Udsæt</span>
         {PRESETS.map(({ preset, label }) => (
-          <Button
+          <button
             key={preset}
-            variant="secondary"
+            type="button"
             disabled={busy}
             onClick={() => void handlePreset(preset)}
+            className="flex-1 rounded-[9px] bg-hyrm-surface py-1.5 text-center text-[11px] font-semibold text-hyrm-time disabled:opacity-50"
           >
             {busy ? '…' : label}
-          </Button>
+          </button>
         ))}
-        <Button
-          variant="secondary"
+        <button
+          type="button"
           disabled={busy}
           onClick={() => setShowCustom((open) => !open)}
+          className="flex-1 rounded-[9px] bg-hyrm-surface py-1.5 text-center text-[11px] font-semibold text-hyrm-time disabled:opacity-50"
         >
-          Vælg tidspunkt
-        </Button>
+          Vælg
+        </button>
       </div>
       {showCustom && (
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="mt-2 flex flex-wrap items-end gap-2">
           <label className="block space-y-1 text-sm">
-            <span className="text-slate-400">Dato</span>
+            <span className="text-hyrm-muted">Dato</span>
             <input
               type="date"
-              className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+              className="rounded-[14px] border border-white/10 bg-hyrm-bg px-3 py-2 text-hyrm-text"
               value={customDate}
               onChange={(e) => setCustomDate(e.target.value)}
             />
           </label>
           <label className="block space-y-1 text-sm">
-            <span className="text-slate-400">Tid</span>
+            <span className="text-hyrm-muted">Tid</span>
             <select
-              className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+              className="rounded-[14px] border border-white/10 bg-hyrm-bg px-3 py-2 text-hyrm-text"
               value={customTime}
               onChange={(e) => setCustomTime(e.target.value)}
             >
@@ -116,12 +110,17 @@ export function SnoozeControls({
               ))}
             </select>
           </label>
-          <Button disabled={busy} onClick={() => void handleCustom()}>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void handleCustom()}
+            className="rounded-[var(--radius-btn)] bg-hyrm-accent px-4 py-2 text-sm font-bold text-hyrm-bg"
+          >
             Gem
-          </Button>
+          </button>
         </div>
       )}
-      {error && <p className="text-sm text-rose-400">{error}</p>}
+      {error && <p className="text-sm text-hyrm-danger">{error}</p>}
     </div>
   );
 }

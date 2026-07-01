@@ -31,6 +31,14 @@ export function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/edit/:templateId"
+        element={
+          <ProtectedRoute>
+            <CreateTaskPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

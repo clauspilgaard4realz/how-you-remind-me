@@ -6,9 +6,11 @@ import { Banner, Card } from './ui';
 export function PushHealthPanel({
   dispatchHealth,
   pushState,
+  compact = false,
 }: {
   dispatchHealth: DispatchHealth | null;
   pushState: PushHealthState | null;
+  compact?: boolean;
 }) {
   if (!pushState) return null;
 
@@ -43,43 +45,45 @@ export function PushHealthPanel({
   }
 
   return (
-    <Card>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">
-        Push-status
-      </h2>
+    <Card className={compact ? 'border-white/4 bg-hyrm-bg/50 p-3' : ''}>
+      {!compact && (
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-hyrm-muted">
+          Push-status
+        </h2>
+      )}
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">Notification.permission</dt>
+          <dt className="text-hyrm-muted">Notification.permission</dt>
           <dd>{pushState.notificationPermission}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">PushManager permission</dt>
+          <dt className="text-hyrm-muted">PushManager permission</dt>
           <dd>{pushState.pushPermissionState}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">Subscription</dt>
+          <dt className="text-hyrm-muted">Subscription</dt>
           <dd>{pushState.hasSubscription ? 'Aktiv' : 'Mangler'}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">Service worker</dt>
+          <dt className="text-hyrm-muted">Service worker</dt>
           <dd>{pushState.hasServiceWorker ? 'Aktiv' : 'Mangler'}</dd>
         </div>
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">PWA standalone</dt>
+          <dt className="text-hyrm-muted">PWA standalone</dt>
           <dd>{pushState.isStandalone ? 'Ja' : 'Nej'}</dd>
         </div>
         {dispatchHealth && (
           <>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-400">Seneste dispatch</dt>
+              <dt className="text-hyrm-muted">Seneste dispatch</dt>
               <dd>{formatLocalDateTime(dispatchHealth.lastDispatchCompletedAt)}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-400">Åbne uden enhed</dt>
+              <dt className="text-hyrm-muted">Åbne uden enhed</dt>
               <dd>{dispatchHealth.openOccurrencesWithoutDevice}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-slate-400">E-mail backup</dt>
+              <dt className="text-hyrm-muted">E-mail backup</dt>
               <dd>{dispatchHealth.emailConfigured ? 'Aktiv' : 'Ikke konfigureret'}</dd>
             </div>
           </>
