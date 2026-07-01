@@ -156,16 +156,16 @@ I `firebase.json` er `/api/**` sat til Cloud Run `reminder-api`. Alternativt: s�
 
 ## PoC definition of done
 
-- [ ] PWA installeres fra Safari på fysisk iPhone
-- [ ] Google login + UID whitelist
-- [ ] Push subscription registreres
-- [ ] Single task oprettes med kvarters-tid
-- [ ] Dispatcher sender push på 15-min slot
-- [ ] Tap på push åbner relevant occurrence
-- [ ] Klaret stopper fremtidige reminders
-- [ ] Ugyldig subscription (410) deaktiveres
-- [ ] Gentaget slot giver højst ét aktivt claim
-- [ ] Push health vises i appen
+- [x] PWA installeres fra Safari på fysisk iPhone
+- [x] Google login + UID whitelist
+- [x] Push subscription registreres
+- [x] Single task oprettes med kvarters-tid
+- [x] Dispatcher sender push på 15-min slot
+- [x] Tap på push åbner relevant occurrence
+- [x] Klaret stopper fremtidige reminders
+- [x] Ugyldig subscription (410) deaktiveres
+- [x] Gentaget slot giver højst ét aktivt claim
+- [x] Push health vises i appen
 
 ---
 

@@ -1,7 +1,13 @@
 import { Router } from 'express';
-import { validateCreateSingleTask } from '@hyrm/shared';
+import { validateCreateSingleTask, validateSnoozeOccurrence } from '@hyrm/shared';
 import { requireAuth } from '../middleware/auth.js';
-import { completeOccurrence, createSingleTask, registerPushDevice } from '../services/tasks.js';
+import { resolveSnoozeWakeAt } from '../lib/snooze.js';
+import {
+  completeOccurrence,
+  createSingleTask,
+  registerPushDevice,
+  snoozeOccurrence,
+} from '../services/tasks.js';
 
 export const apiRouter = Router();
 
@@ -29,6 +35,33 @@ apiRouter.post('/occurrences/:id/complete', async (req, res) => {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Complete failed';
     const status = message === 'Occurrence not found' ? 404 : message === 'Forbidden' ? 403 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+apiRouter.post('/occurrences/:id/snooze', async (req, res) => {
+  const validationError = validateSnoozeOccurrence(req.body ?? {});
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+
+  try {
+    const snoozedUntil = resolveSnoozeWakeAt(req.body);
+    const result = await snoozeOccurrence(req.user!.uid, req.params.id, snoozedUntil);
+    res.status(200).json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Snooze failed';
+    const status =
+      message === 'Occurrence not found'
+        ? 404
+        : message === 'Forbidden'
+          ? 403
+          : message === 'Occurrence is already completed'
+            ? 409
+            : message.includes('future')
+              ? 400
+              : 500;
     res.status(status).json({ error: message });
   }
 });

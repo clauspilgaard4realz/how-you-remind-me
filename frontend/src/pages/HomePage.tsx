@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import type { TaskOccurrence, TaskTemplate } from '@hyrm/shared';
+import type { SnoozePreset, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
 import { apiFetch } from '../lib/api';
 import {
   getExistingPushSubscription,
@@ -17,6 +17,7 @@ import { formatLocalDateTime } from '../lib/time';
 import { useAuth } from '../hooks/useAuth';
 import { useDispatchHealth, useOpenOccurrences, useTaskTemplates } from '../hooks/useFirestoreData';
 import { PushHealthPanel } from '../components/PushHealthPanel';
+import { SnoozeControls } from '../components/SnoozeControls';
 import { AppShell, Banner, Button, Card } from '../components/ui';
 
 function templateTitle(templateId: string, templates: TaskTemplate[]): string {
@@ -28,29 +29,41 @@ function OccurrenceRow({
   title,
   highlighted,
   onComplete,
+  onSnooze,
   completing,
+  snoozing,
 }: {
   occurrence: TaskOccurrence;
   title: string;
   highlighted: boolean;
   onComplete: (id: string) => void;
+  onSnooze: (id: string, preset: SnoozePreset, customAt?: string) => Promise<void>;
   completing: string | null;
+  snoozing: string | null;
 }) {
+  const busy = completing === occurrence.id || snoozing === occurrence.id;
+
   return (
     <Card className={highlighted ? 'border-sky-500/60 ring-1 ring-sky-500/30' : ''}>
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="font-medium text-white">{title}</h3>
           <p className="mt-1 text-sm text-slate-400">
             Planlagt: {formatLocalDateTime(occurrence.scheduledAt)}
           </p>
+          {occurrence.nextReminderAt && (
+            <p className="text-sm text-slate-500">
+              Næste påmindelse: {formatLocalDateTime(occurrence.nextReminderAt)}
+            </p>
+          )}
           <p className="text-xs uppercase tracking-wide text-slate-500">{occurrence.status}</p>
+          <SnoozeControls
+            occurrence={occurrence}
+            busy={snoozing === occurrence.id}
+            onSnooze={(preset, customAt) => onSnooze(occurrence.id, preset, customAt)}
+          />
         </div>
-        <Button
-          variant="secondary"
-          disabled={completing === occurrence.id}
-          onClick={() => onComplete(occurrence.id)}
-        >
+        <Button variant="secondary" disabled={busy} onClick={() => onComplete(occurrence.id)}>
           {completing === occurrence.id ? '…' : 'Klaret'}
         </Button>
       </div>
@@ -67,6 +80,7 @@ export function HomePage() {
   const highlightId = searchParams.get('occurrence');
 
   const [completing, setCompleting] = useState<string | null>(null);
+  const [snoozing, setSnoozing] = useState<string | null>(null);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState<string | null>(null);
   const [needsInstall, setNeedsInstall] = useState(false);
@@ -162,6 +176,20 @@ export function HomePage() {
     void refreshPushRegistration().catch(() => undefined);
   }, [getIdToken]);
 
+  async function snoozeOccurrence(id: string, preset: SnoozePreset, customAt?: string) {
+    setSnoozing(id);
+    try {
+      const token = await getIdToken();
+      await apiFetch(`/api/occurrences/${id}/snooze`, {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ preset, customAt }),
+      });
+    } finally {
+      setSnoozing(null);
+    }
+  }
+
   async function completeOccurrence(id: string) {
     setCompleting(id);
     try {
@@ -219,7 +247,9 @@ export function HomePage() {
             title={templateTitle(occurrence.templateId, templates)}
             highlighted={occurrence.id === highlightId}
             onComplete={completeOccurrence}
+            onSnooze={snoozeOccurrence}
             completing={completing}
+            snoozing={snoozing}
           />
         ))
       )}

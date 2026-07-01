@@ -141,3 +141,33 @@ export async function registerPushDevice(
 
   return { id: deviceId };
 }
+
+export async function snoozeOccurrence(
+  ownerId: string,
+  occurrenceId: string,
+  snoozedUntil: string
+): Promise<{ snoozedUntil: string }> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrenceId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Occurrence not found');
+  }
+  const data = snap.data() as TaskOccurrence;
+  if (data.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+  if (data.status === 'completed') {
+    throw new Error('Occurrence is already completed');
+  }
+
+  const now = new Date().toISOString();
+  await ref.update({
+    status: 'snoozed',
+    snoozedUntil,
+    nextReminderAt: snoozedUntil,
+    updatedAt: now,
+  });
+
+  return { snoozedUntil };
+}
