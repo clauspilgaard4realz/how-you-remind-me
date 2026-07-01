@@ -77,7 +77,13 @@ function OccurrenceRow({
 export function HomePage() {
   const { getIdToken, signOutUser } = useAuth();
   const { templates } = useTaskTemplates();
-  const { occurrences, loading } = useOpenOccurrences();
+  const {
+    occurrences,
+    loading,
+    markCompletedLocally,
+    unmarkCompletedLocally,
+    applySnoozeLocally,
+  } = useOpenOccurrences();
   const dispatchHealth = useDispatchHealth();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('occurrence');
@@ -183,17 +189,19 @@ export function HomePage() {
     setSnoozing(id);
     try {
       const token = await getIdToken();
-      await apiFetch(`/api/occurrences/${id}/snooze`, {
+      const result = await apiFetch<{ snoozedUntil: string }>(`/api/occurrences/${id}/snooze`, {
         method: 'POST',
         token,
         body: JSON.stringify({ preset, customAt }),
       });
+      applySnoozeLocally(id, result.snoozedUntil);
     } finally {
       setSnoozing(null);
     }
   }
 
   async function completeOccurrence(id: string) {
+    markCompletedLocally(id);
     setCompleting(id);
     try {
       const token = await getIdToken();
@@ -201,6 +209,9 @@ export function HomePage() {
         method: 'POST',
         token,
       });
+    } catch (err) {
+      unmarkCompletedLocally(id);
+      throw err;
     } finally {
       setCompleting(null);
     }
