@@ -1,10 +1,13 @@
 import { Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { allowedUid } from '../lib/config';
 import { useAuth } from '../hooks/useAuth';
 import { AppShell, Banner, Button, Card } from '../components/ui';
 
 export function LoginPage() {
-  const { user, allowed, loading, signIn, signOutUser } = useAuth();
+  const { user, allowed, loading, authError, signIn, signOutUser } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -49,7 +52,21 @@ export function LoginPage() {
         <p className="mb-4 text-sm leading-relaxed text-slate-300">
           Privat reminder-app til én bruger. Log ind med Google for at fortsætte.
         </p>
-        <Button onClick={() => void signIn()}>Log ind med Google</Button>
+        {(authError || localError) && (
+          <p className="mb-4 text-sm text-rose-400">{authError ?? localError}</p>
+        )}
+        <Button
+          disabled={busy}
+          onClick={() => {
+            setLocalError(null);
+            setBusy(true);
+            void signIn().catch((err: unknown) => {
+              setLocalError(err instanceof Error ? err.message : 'Login fejlede');
+            }).finally(() => setBusy(false));
+          }}
+        >
+          {busy ? 'Logger ind…' : 'Log ind med Google'}
+        </Button>
       </Card>
     </AppShell>
   );

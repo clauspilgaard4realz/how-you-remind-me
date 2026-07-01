@@ -7,6 +7,7 @@ dist/
 .DS_Store
 .firebase/
 serviceAccount*.json
+sa-key*.json
 *.tsbuildinfo
 
 # Secrets og lokal deploy-config

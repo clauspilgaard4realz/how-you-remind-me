@@ -16,7 +16,6 @@ export function assertClientConfig(): void {
     ['VITE_FIREBASE_API_KEY', firebaseConfig.apiKey],
     ['VITE_FIREBASE_AUTH_DOMAIN', firebaseConfig.authDomain],
     ['VITE_FIREBASE_PROJECT_ID', firebaseConfig.projectId],
-    ['VITE_API_BASE_URL', apiBaseUrl],
     ['VITE_VAPID_PUBLIC_KEY', vapidPublicKey],
     ['VITE_ALLOWED_UID', allowedUid],
   ] as const;

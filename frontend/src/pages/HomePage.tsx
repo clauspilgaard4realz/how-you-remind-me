@@ -62,6 +62,12 @@ export function HomePage() {
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('occurrence');
 
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+    }
+  }, []);
+
   const [completing, setCompleting] = useState<string | null>(null);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState<string | null>(null);
