@@ -181,5 +181,5 @@ Ved privat brug og korrekt konfiguration (ingen minimum instances, indexerede qu
 - Flere reminder-faser
 - Gruppering af notifications
 - Snooze (kontrakt er defineret i plan)
-- E-mail backup for kritiske reminders
+- E-mail backup for kritiske reminders *(implementeret — kræver SMTP på dispatcher)*
 - Custom Cloud Monitoring metrics fra dispatcher

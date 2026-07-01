@@ -17,6 +17,19 @@ interface PushPayload {
   occurrenceId?: string;
 }
 
+async function notifyClients(payload: PushPayload, title: string, body: string): Promise<void> {
+  const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  for (const client of clients) {
+    client.postMessage({
+      type: 'push-received',
+      title,
+      body,
+      occurrenceId: payload.occurrenceId,
+      url: payload.url,
+    });
+  }
+}
+
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -28,8 +41,9 @@ self.addEventListener('push', (event) => {
   }
 
   const title = payload.title ?? 'How You Remind Me';
+  const body = payload.body ?? 'Du har en reminder';
   const options: NotificationOptions = {
-    body: payload.body ?? 'Du har en reminder',
+    body,
     tag: payload.tag ?? payload.occurrenceId,
     data: {
       url: payload.url ?? '/',
@@ -37,7 +51,13 @@ self.addEventListener('push', (event) => {
     },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // Apple: vis notifikation med det samme i SW — ellers kan tilladelse tilbagekaldes.
+  event.waitUntil(
+    Promise.all([
+      self.registration.showNotification(title, options),
+      notifyClients(payload, title, body),
+    ])
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {

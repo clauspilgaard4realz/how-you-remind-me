@@ -1,3 +1,4 @@
+import type { DocumentReference } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import {
   COLLECTIONS,
@@ -8,8 +9,10 @@ import {
   type TaskOccurrence,
   type TaskTemplate,
 } from '@hyrm/shared';
+import { effectiveChannels } from '../lib/channels.js';
 import { getDb } from '../lib/firebase.js';
 import { addCadenceMinutes, formatSlotIso } from '../lib/slots.js';
+import { getOwnerNotificationEmail, isEmailConfigured, sendReminderEmail } from './email.js';
 import { buildPushPayload, sendPushToDevices } from './push.js';
 
 const LEASE_MS = 60_000;
@@ -116,6 +119,19 @@ function isDue(occurrence: TaskOccurrence, slotIso: string): boolean {
   return new Date(occurrence.nextReminderAt) <= new Date(slotIso);
 }
 
+async function markOccurrenceReminded(
+  docRef: DocumentReference,
+  occurrence: TaskOccurrence,
+  slotIso: string
+): Promise<void> {
+  const nextReminderAt = addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES);
+  await docRef.update({
+    nextReminderAt,
+    updatedAt: new Date().toISOString(),
+    status: occurrence.status === 'snoozed' ? 'open' : occurrence.status,
+  });
+}
+
 export async function dispatchDueNotifications(slot: Date): Promise<{
   processed: number;
   sent: number;
@@ -147,86 +163,119 @@ export async function dispatchDueNotifications(slot: Date): Promise<{
     if (!template.active) continue;
 
     const phaseId = occurrence.currentPhaseId ?? template.reminderPhases[0]?.id ?? 'phase-1';
+    const channels = effectiveChannels(template, phaseId);
+    const wantsPush = channels.has('push');
+    const wantsEmail = channels.has('email');
+
     const claim = await claimAttempt(occurrence, template, slot, phaseId);
     if (!claim.claimed || !claim.attempt || !claim.leaseId) continue;
 
     processed += 1;
-    const devices = await loadActiveDevices(occurrence.ownerId);
-    if (devices.length === 0) {
+    const errors: string[] = [];
+
+    let pushAccepted = false;
+    if (wantsPush) {
+      const devices = await loadActiveDevices(occurrence.ownerId);
+      if (devices.length === 0) {
+        errors.push('No active push devices');
+      } else {
+        const payload = buildPushPayload(occurrence, template);
+        const results = await sendPushToDevices(devices, payload);
+        pushAccepted = results.some((r) => r.ok);
+
+        const permanentDeviceFailures = results.filter(
+          (r) => r.statusCode === 404 || r.statusCode === 410
+        );
+        for (const failure of permanentDeviceFailures) {
+          await deactivateDevice(occurrence.ownerId, failure.deviceId);
+        }
+
+        if (pushAccepted) {
+          const now = new Date().toISOString();
+          for (const device of devices) {
+            const result = results.find((r) => r.deviceId === device.id);
+            if (result?.ok) {
+              await db
+                .collection('users')
+                .doc(occurrence.ownerId)
+                .collection('push_devices')
+                .doc(device.id)
+                .set(
+                  {
+                    lastProviderAcceptedAt: now,
+                    lastSeenAt: now,
+                    failureCount: 0,
+                  },
+                  { merge: true }
+                );
+            } else if (result && !result.ok) {
+              await db
+                .collection('users')
+                .doc(occurrence.ownerId)
+                .collection('push_devices')
+                .doc(device.id)
+                .set(
+                  {
+                    failureCount: (device.failureCount ?? 0) + 1,
+                    lastSeenAt: now,
+                  },
+                  { merge: true }
+                );
+            }
+          }
+        } else {
+          errors.push(
+            results.map((r) => r.error).filter(Boolean).join('; ') || 'Push failed'
+          );
+        }
+      }
+    }
+
+    let emailAccepted = false;
+    if (wantsEmail) {
+      if (!isEmailConfigured()) {
+        errors.push('Email channel enabled but SMTP is not configured');
+      } else {
+        const recipient = await getOwnerNotificationEmail(occurrence.ownerId);
+        if (!recipient) {
+          errors.push('No notification email for owner');
+        } else {
+          try {
+            await sendReminderEmail(recipient, occurrence, template);
+            emailAccepted = true;
+          } catch (err) {
+            errors.push(err instanceof Error ? err.message : 'Email failed');
+          }
+        }
+      }
+    }
+
+    if (!wantsPush && !wantsEmail) {
       await confirmAttempt(claim.attempt.id, claim.leaseId, {
         status: 'failed_permanent',
-        lastError: 'No active push devices',
+        lastError: 'No notification channels configured',
       });
       failures += 1;
       continue;
     }
 
-    const payload = buildPushPayload(occurrence, template);
-    const results = await sendPushToDevices(devices, payload);
-    const anyAccepted = results.some((r) => r.ok);
-    const permanentDeviceFailures = results.filter(
-      (r) => r.statusCode === 404 || r.statusCode === 410
-    );
-
-    for (const failure of permanentDeviceFailures) {
-      await deactivateDevice(occurrence.ownerId, failure.deviceId);
-    }
-
-    if (anyAccepted) {
+    if (pushAccepted || emailAccepted) {
       sent += 1;
       await confirmAttempt(claim.attempt.id, claim.leaseId, {
         status: 'provider_accepted',
         providerAcceptedAt: new Date().toISOString(),
+        lastError: errors.length ? errors.join('; ') : undefined,
       });
-
-      const nextReminderAt = addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES);
-      await doc.ref.update({
-        nextReminderAt,
-        updatedAt: new Date().toISOString(),
-        status: occurrence.status === 'snoozed' ? 'open' : occurrence.status,
-      });
-
-      const now = new Date().toISOString();
-      for (const device of devices) {
-        const result = results.find((r) => r.deviceId === device.id);
-        if (result?.ok) {
-          await db
-            .collection('users')
-            .doc(occurrence.ownerId)
-            .collection('push_devices')
-            .doc(device.id)
-            .set(
-              {
-                lastProviderAcceptedAt: now,
-                lastSeenAt: now,
-                failureCount: 0,
-              },
-              { merge: true }
-            );
-        } else if (result && !result.ok) {
-          await db
-            .collection('users')
-            .doc(occurrence.ownerId)
-            .collection('push_devices')
-            .doc(device.id)
-            .set(
-              {
-                failureCount: (device.failureCount ?? 0) + 1,
-                lastSeenAt: now,
-              },
-              { merge: true }
-            );
-        }
-      }
+      await markOccurrenceReminded(doc.ref, occurrence, slotIso);
     } else {
       failures += 1;
-      const retryable = results.some(
-        (r) => r.statusCode === 429 || (r.statusCode !== undefined && r.statusCode >= 500)
-      );
+      const retryable =
+        wantsPush &&
+        errors.some((message) => message.includes('429') || message.includes('500'));
       await confirmAttempt(claim.attempt.id, claim.leaseId, {
         status: retryable ? 'retry_scheduled' : 'failed_permanent',
         retryAt: retryable ? addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES) : undefined,
-        lastError: results.map((r) => r.error).filter(Boolean).join('; ') || 'Push failed',
+        lastError: errors.join('; ') || 'All channels failed',
       });
     }
   }
@@ -252,7 +301,9 @@ export async function updateDispatchHealth(
       .where('ownerId', '==', allowedUid)
       .where('status', 'in', ['open', 'snoozed', 'overdue'])
       .get();
-    openOccurrencesWithoutDevice = activeDeviceCount === 0 ? openSnap.size : 0;
+    const emailConfigured = isEmailConfigured();
+    openOccurrencesWithoutDevice =
+      activeDeviceCount === 0 && !emailConfigured ? openSnap.size : 0;
   }
 
   const now = new Date().toISOString();
@@ -271,6 +322,7 @@ export async function updateDispatchHealth(
       activeDeviceCount,
       openOccurrencesWithoutDevice,
       consecutiveFailures,
+      emailConfigured: isEmailConfigured(),
     },
     { merge: true }
   );

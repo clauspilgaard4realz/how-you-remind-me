@@ -1,13 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { TaskOccurrence, TaskTemplate } from '@hyrm/shared';
 import { apiFetch } from '../lib/api';
 import {
   getExistingPushSubscription,
   getPushHealthState,
+  getPushPermissionState,
   isStandalonePwa,
+  listenForPushMessages,
   subscribeToPush,
   subscriptionToJson,
+  unsubscribeFromPush,
+  type PushHealthState,
 } from '../lib/push';
 import { formatLocalDateTime } from '../lib/time';
 import { useAuth } from '../hooks/useAuth';
@@ -62,20 +66,32 @@ export function HomePage() {
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('occurrence');
 
-  useEffect(() => {
-    if (import.meta.env.PROD) {
-      void import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
-    }
-  }, []);
-
   const [completing, setCompleting] = useState<string | null>(null);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState<string | null>(null);
   const [needsInstall, setNeedsInstall] = useState(false);
+  const [pushState, setPushState] = useState<PushHealthState | null>(null);
+
+  const refreshPushHealth = useCallback(async () => {
+    const state = await getPushHealthState();
+    setPushState(state);
+    setNeedsInstall(!state.isStandalone);
+  }, []);
 
   useEffect(() => {
-    void getPushHealthState().then((state) => {
-      setNeedsInstall(!state.isStandalone);
+    if (import.meta.env.PROD) {
+      void import('virtual:pwa-register').then(({ registerSW }) => {
+        registerSW({ immediate: true });
+        void refreshPushHealth();
+      });
+    } else {
+      void refreshPushHealth();
+    }
+  }, [refreshPushHealth]);
+
+  useEffect(() => {
+    return listenForPushMessages((msg) => {
+      setPushMessage(`Push modtaget: ${msg.title} — ${msg.body}`);
     });
   }, []);
 
@@ -87,11 +103,25 @@ export function HomePage() {
         setPushMessage('Tilføj appen til hjemmeskærmen i Safari først.');
         return;
       }
+
+      if (import.meta.env.PROD) {
+        await import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true }));
+      }
+      await navigator.serviceWorker.ready;
+
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        setPushMessage('Notifikationstilladelse blev ikke givet.');
+      const pushPermission = await getPushPermissionState();
+
+      if (permission !== 'granted' || pushPermission !== 'granted') {
+        await unsubscribeFromPush();
+        setPushMessage(
+          'Notifikationstilladelse blev ikke givet. Du skal trykke Tillad i iOS-dialogen — ellers vises intet, selvom backend sender.'
+        );
+        await refreshPushHealth();
         return;
       }
+
+      await unsubscribeFromPush();
       const subscription = await subscribeToPush();
       const token = await getIdToken();
       await apiFetch('/api/push-devices', {
@@ -103,9 +133,11 @@ export function HomePage() {
           platform: navigator.platform,
         }),
       });
-      setPushMessage('Push er aktiveret på denne enhed.');
+      await refreshPushHealth();
+      setPushMessage('Push er aktiveret. Luk appen og vent på næste 15-min slot for at teste banner.');
     } catch (err) {
       setPushMessage(err instanceof Error ? err.message : 'Push-aktivering fejlede');
+      await refreshPushHealth();
     } finally {
       setPushBusy(false);
     }
@@ -171,7 +203,7 @@ export function HomePage() {
         {pushMessage && <p className="mt-3 text-sm text-slate-300">{pushMessage}</p>}
       </Card>
 
-      <PushHealthPanel dispatchHealth={dispatchHealth} />
+      <PushHealthPanel dispatchHealth={dispatchHealth} pushState={pushState} />
 
       {loading ? (
         <p className="text-sm text-slate-400">Indlæser opgaver…</p>

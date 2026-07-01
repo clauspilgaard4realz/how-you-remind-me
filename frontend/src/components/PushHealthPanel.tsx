@@ -1,30 +1,45 @@
-import { useEffect, useState } from 'react';
 import type { DispatchHealth } from '@hyrm/shared';
 import { formatLocalDateTime } from '../lib/time';
-import { getPushHealthState, type PushHealthState } from '../lib/push';
+import type { PushHealthState } from '../lib/push';
 import { Banner, Card } from './ui';
 
-export function PushHealthPanel({ dispatchHealth }: { dispatchHealth: DispatchHealth | null }) {
-  const [pushState, setPushState] = useState<PushHealthState | null>(null);
-
-  useEffect(() => {
-    void getPushHealthState().then(setPushState);
-  }, []);
-
+export function PushHealthPanel({
+  dispatchHealth,
+  pushState,
+}: {
+  dispatchHealth: DispatchHealth | null;
+  pushState: PushHealthState | null;
+}) {
   if (!pushState) return null;
 
   const issues: string[] = [];
   if (!pushState.isStandalone) {
     issues.push('Appen er ikke installeret på hjemmeskærmen (kræves for push på iPhone).');
   }
-  if (pushState.permission === 'denied') {
-    issues.push('Notifikationer er blokeret i browser/OS.');
+  if (pushState.notificationPermission === 'denied') {
+    issues.push('Notifikationer er blokeret. Gå til Indstillinger → søg efter "How You Remind Me".');
   }
-  if (pushState.permission === 'default') {
+  if (pushState.permissionMismatch) {
+    issues.push(
+      'Subscription findes, men iOS-tilladelse mangler. Tryk "Aktivér push" igen og vælg Tillad i system-dialogen.'
+    );
+  }
+  if (
+    pushState.notificationPermission === 'default' &&
+    !pushState.hasSubscription &&
+    pushState.isStandalone
+  ) {
     issues.push('Notifikationstilladelse er ikke givet endnu.');
   }
-  if (pushState.permission === 'granted' && !pushState.hasSubscription) {
-    issues.push('Ingen aktiv push-subscription registreret.');
+  if (!pushState.hasServiceWorker && pushState.isStandalone) {
+    issues.push('Service worker kører ikke endnu — genindlæs appen.');
+  }
+  if (
+    pushState.notificationPermission === 'granted' &&
+    pushState.pushPermissionState === 'granted' &&
+    !pushState.hasSubscription
+  ) {
+    issues.push('Tilladelse OK, men ingen push-subscription — tryk "Aktivér push".');
   }
 
   return (
@@ -34,12 +49,20 @@ export function PushHealthPanel({ dispatchHealth }: { dispatchHealth: DispatchHe
       </h2>
       <dl className="space-y-2 text-sm">
         <div className="flex justify-between gap-4">
-          <dt className="text-slate-400">Tilladelse</dt>
-          <dd>{pushState.permission}</dd>
+          <dt className="text-slate-400">Notification.permission</dt>
+          <dd>{pushState.notificationPermission}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-slate-400">PushManager permission</dt>
+          <dd>{pushState.pushPermissionState}</dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-slate-400">Subscription</dt>
           <dd>{pushState.hasSubscription ? 'Aktiv' : 'Mangler'}</dd>
+        </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-slate-400">Service worker</dt>
+          <dd>{pushState.hasServiceWorker ? 'Aktiv' : 'Mangler'}</dd>
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-slate-400">PWA standalone</dt>
@@ -54,6 +77,10 @@ export function PushHealthPanel({ dispatchHealth }: { dispatchHealth: DispatchHe
             <div className="flex justify-between gap-4">
               <dt className="text-slate-400">Åbne uden enhed</dt>
               <dd>{dispatchHealth.openOccurrencesWithoutDevice}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-slate-400">E-mail backup</dt>
+              <dd>{dispatchHealth.emailConfigured ? 'Aktiv' : 'Ikke konfigureret'}</dd>
             </div>
           </>
         )}

@@ -107,25 +107,37 @@ export async function registerPushDevice(
   const deviceId = Buffer.from(device.endpoint).toString('base64url').slice(0, 128);
   const now = new Date().toISOString();
 
-  await db
+  const existingActive = await db
     .collection('users')
     .doc(ownerId)
     .collection('push_devices')
-    .doc(deviceId)
-    .set(
-      {
-        id: deviceId,
-        endpoint: device.endpoint,
-        keys: device.keys,
-        userAgent: device.userAgent ?? '',
-        platform: device.platform ?? '',
-        createdAt: now,
-        lastSeenAt: now,
-        failureCount: 0,
-        active: true,
-      },
-      { merge: true }
-    );
+    .where('active', '==', true)
+    .get();
+
+  const batch = db.batch();
+  for (const doc of existingActive.docs) {
+    if (doc.id !== deviceId) {
+      batch.set(doc.ref, { active: false, updatedAt: now }, { merge: true });
+    }
+  }
+
+  batch.set(
+    db.collection('users').doc(ownerId).collection('push_devices').doc(deviceId),
+    {
+      id: deviceId,
+      endpoint: device.endpoint,
+      keys: device.keys,
+      userAgent: device.userAgent ?? '',
+      platform: device.platform ?? '',
+      createdAt: now,
+      lastSeenAt: now,
+      failureCount: 0,
+      active: true,
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   return { id: deviceId };
 }

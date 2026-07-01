@@ -131,6 +131,7 @@ export interface DispatchHealth {
   activeDeviceCount: number;
   openOccurrencesWithoutDevice: number;
   consecutiveFailures: number;
+  emailConfigured?: boolean;
 }
 
 export interface CreateSingleTaskRequest {

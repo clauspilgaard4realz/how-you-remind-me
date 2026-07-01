@@ -34,7 +34,7 @@ export function CreateTaskPage() {
           id: 'phase-1',
           anchor: 'occurrence_scheduled_at',
           cadence: { unit: 'minutes', every: 15 },
-          channels: ['push'],
+          channels: ['push', 'email'],
         },
       ],
     };
@@ -96,7 +96,7 @@ export function CreateTaskPage() {
           </div>
 
           <p className="text-xs text-slate-500">
-            PoC: én single opgave med reminder hvert 15. minut fra valgt tidspunkt.
+            PoC: én single opgave med push + e-mail hvert 15. minut fra valgt tidspunkt.
           </p>
 
           {error && <p className="text-sm text-rose-400">{error}</p>}

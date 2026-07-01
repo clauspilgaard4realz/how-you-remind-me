@@ -31,7 +31,10 @@ export async function sendPushToDevices(
             keys: device.keys,
           },
           body,
-          { TTL: 3600 }
+          {
+            TTL: 3600,
+            topic: payload.occurrenceId.slice(0, 32),
+          }
         );
         return { deviceId: device.id, ok: true, statusCode: 201 };
       } catch (err) {

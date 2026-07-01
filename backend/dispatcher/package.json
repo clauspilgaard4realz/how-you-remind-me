@@ -13,6 +13,7 @@
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
     "luxon": "^3.6.1",
+    "nodemailer": "^9.0.3",
     "uuid": "^11.1.0",
     "web-push": "^3.6.7"
   },
@@ -20,6 +21,7 @@
     "@types/express": "^5.0.2",
     "@types/luxon": "^3.6.2",
     "@types/node": "^22.15.29",
+    "@types/nodemailer": "^8.0.1",
     "@types/web-push": "^3.6.4",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"

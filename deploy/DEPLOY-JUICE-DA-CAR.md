@@ -55,8 +55,13 @@ gcloud run deploy reminder-dispatcher `
   --region europe-west1 `
   --project juice-da-car `
   --no-allow-unauthenticated `
-  --set-secrets "VAPID_PRIVATE_KEY=vapid-private-key:latest" `
-  --set-env-vars "ALLOWED_UID=DIN_UID,VAPID_PUBLIC_KEY=DIN_PUBLIC_KEY,VAPID_SUBJECT=mailto:claus@replaymaker.dk,FIREBASE_PROJECT_ID=juice-da-car"
+  --set-secrets "VAPID_PRIVATE_KEY=vapid-private-key:latest,SMTP_PASS=smtp-password:latest" `
+  --set-env-vars "ALLOWED_UID=DIN_UID,VAPID_PUBLIC_KEY=DIN_PUBLIC_KEY,VAPID_SUBJECT=mailto:claus@replaymaker.dk,FIREBASE_PROJECT_ID=juice-da-car,SMTP_HOST=smtp.gmail.com,SMTP_PORT=587,SMTP_USER=claus@replaymaker.dk,EMAIL_FROM=How You Remind Me <reminders@replaymaker.dk>,APP_BASE_URL=https://juice-da-car.web.app"
+
+# E-mail: opret Google app password og gem som secret (engang)
+echo -n "DIT_APP_PASSWORD" | gcloud secrets create smtp-password --data-file=- --project juice-da-car --replication-policy=user-managed --locations=europe-west1
+
+# Modtager hentes fra Firebase Auth (Google login). Override: NOTIFICATION_EMAIL=...
 
 # 4. Cloud Scheduler (efter dispatcher-URL er kendt)
 # Se README.md

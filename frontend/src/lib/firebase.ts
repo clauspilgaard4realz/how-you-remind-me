@@ -31,6 +31,7 @@ authLog('Firebase auth initialized', {
   projectId: firebaseConfig.projectId,
   appId: firebaseConfig.appId,
   origin: window.location.origin,
+  standalone: window.matchMedia('(display-mode: standalone)').matches,
 });
 
 export const db = getFirestore(app);
