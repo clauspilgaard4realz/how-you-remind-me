@@ -1,5 +1,6 @@
 import { DISPATCH_RESOLUTION_MINUTES } from './constants.js';
-import type { CreateSingleTaskRequest, ReminderPhase, TaskTemplate } from './types.js';
+import type { CreateSingleTaskRequest, CreateTaskRequest, ReminderPhase, TaskTemplate } from './types.js';
+import { validateNagConfig, validateTaskSchedule } from './schedule.js';
 
 export function validateReminderPhase(phase: ReminderPhase): string | null {
   const { unit, every } = phase.cadence;
@@ -13,6 +14,15 @@ export function validateReminderPhase(phase: ReminderPhase): string | null {
     }
   }
   if (phase.channels.length === 0) return 'At least one channel is required';
+  return null;
+}
+
+export function validateCreateTask(body: CreateTaskRequest): string | null {
+  if (!body.title?.trim()) return 'Title is required';
+  const scheduleErr = validateTaskSchedule(body.schedule);
+  if (scheduleErr) return scheduleErr;
+  const nagErr = validateNagConfig(body.nag);
+  if (nagErr) return nagErr;
   return null;
 }
 

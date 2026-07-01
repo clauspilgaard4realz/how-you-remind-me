@@ -1,5 +1,6 @@
 import express from 'express';
 import { dispatchDueNotifications, updateDispatchHealth } from './services/dispatch.js';
+import { materializeActiveTemplates } from './services/materialize.js';
 import { parseSchedulerSlot } from './lib/slots.js';
 
 const app = express();
@@ -38,12 +39,14 @@ app.post('/dispatch', express.json(), async (req, res) => {
   const started = Date.now();
 
   try {
+    const materialized = await materializeActiveTemplates();
     const stats = await dispatchDueNotifications(slot);
     await updateDispatchHealth(slot, stats);
     res.json({
       ok: true,
       slot: slot.toISOString(),
       durationMs: Date.now() - started,
+      materialized,
       ...stats,
     });
   } catch (err) {

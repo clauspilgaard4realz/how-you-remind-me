@@ -4,12 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   COLLECTIONS,
   TIMEZONE,
+  nagToReminderPhase,
   singleOccurrenceId,
   type CreateSingleTaskRequest,
+  type CreateTaskRequest,
+  type RecurringTaskTemplate,
   type SingleTaskTemplate,
   type TaskOccurrence,
 } from '@hyrm/shared';
 import { getDb } from '../lib/firebase.js';
+import { materializeTemplate } from './materialize.js';
 
 function toLocalParts(iso: string): { date: string; time: string } {
   const dt = DateTime.fromISO(iso, { zone: 'utc' }).setZone(TIMEZONE);
@@ -70,6 +74,39 @@ export async function createSingleTask(
   await batch.commit();
 
   return { template, occurrence };
+}
+
+export async function createTask(
+  ownerId: string,
+  body: CreateTaskRequest
+): Promise<{ template: RecurringTaskTemplate; occurrences: TaskOccurrence[] }> {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const templateId = uuidv4();
+  const phase = nagToReminderPhase(body.nag);
+
+  const template: RecurringTaskTemplate = {
+    id: templateId,
+    ownerId,
+    title: body.title.trim(),
+    description: body.description?.trim(),
+    type: 'recurring',
+    active: true,
+    timezone: TIMEZONE,
+    schedule: body.schedule,
+    nag: body.nag,
+    reminderPhases: [phase],
+    group: body.group,
+    priority: body.priority ?? 'normal',
+    revision: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await db.collection(COLLECTIONS.taskTemplates).doc(templateId).set(template);
+  const occurrences = await materializeTemplate(template);
+
+  return { template, occurrences };
 }
 
 export async function completeOccurrence(ownerId: string, occurrenceId: string): Promise<void> {

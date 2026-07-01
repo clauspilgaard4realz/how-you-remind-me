@@ -1,9 +1,12 @@
 import type { DocumentReference } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import {
   COLLECTIONS,
   DISPATCH_RESOLUTION_MINUTES,
+  computeNextReminderAfterSlot,
   notificationAttemptId,
+  resolveTemplateNag,
   type NotificationAttempt,
   type PushDevice,
   type TaskOccurrence,
@@ -92,22 +95,55 @@ async function confirmAttempt(
 ): Promise<boolean> {
   const db = getDb();
   const ref = db.collection(COLLECTIONS.notificationAttempts).doc(attemptId);
+  const payload = Object.fromEntries(
+    Object.entries({
+      ...update,
+      updatedAt: new Date().toISOString(),
+    }).filter(([, value]) => value !== undefined)
+  );
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) return false;
     const current = snap.data() as NotificationAttempt;
     if (current.leaseId !== leaseId) return false;
-    tx.set(
-      ref,
-      {
-        ...update,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    tx.set(ref, payload, { merge: true });
     return true;
   });
+}
+
+export async function wakeExpiredSnoozes(slotIso: string): Promise<number> {
+  const db = getDb();
+  const snap = await db
+    .collection(COLLECTIONS.taskOccurrences)
+    .where('status', '==', 'snoozed')
+    .limit(50)
+    .get();
+
+  let woken = 0;
+  const now = new Date().toISOString();
+
+  for (const doc of snap.docs) {
+    const occurrence = doc.data() as TaskOccurrence;
+    if (!occurrence.snoozedUntil || new Date(occurrence.snoozedUntil) > new Date(slotIso)) {
+      continue;
+    }
+
+    const nextReminderAt =
+      occurrence.nextReminderAt && new Date(occurrence.nextReminderAt) <= new Date(slotIso)
+        ? occurrence.nextReminderAt
+        : slotIso;
+
+    await doc.ref.update({
+      status: 'open',
+      snoozedUntil: FieldValue.delete(),
+      nextReminderAt,
+      updatedAt: now,
+    });
+    woken += 1;
+  }
+
+  return woken;
 }
 
 function isDue(occurrence: TaskOccurrence, slotIso: string): boolean {
@@ -122,14 +158,21 @@ function isDue(occurrence: TaskOccurrence, slotIso: string): boolean {
 async function markOccurrenceReminded(
   docRef: DocumentReference,
   occurrence: TaskOccurrence,
+  template: TaskTemplate,
   slotIso: string
 ): Promise<void> {
-  const nextReminderAt = addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES);
-  await docRef.update({
-    nextReminderAt,
+  const nag = resolveTemplateNag(template);
+  const nextReminderAt = computeNextReminderAfterSlot(nag, slotIso, occurrence.scheduledAt);
+  const update: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),
     status: occurrence.status === 'snoozed' ? 'open' : occurrence.status,
-  });
+  };
+  if (nextReminderAt) {
+    update.nextReminderAt = nextReminderAt;
+  } else {
+    update.nextReminderAt = FieldValue.delete();
+  }
+  await docRef.update(update);
 }
 
 export async function dispatchDueNotifications(slot: Date): Promise<{
@@ -139,6 +182,7 @@ export async function dispatchDueNotifications(slot: Date): Promise<{
 }> {
   const db = getDb();
   const slotIso = formatSlotIso(slot);
+  await wakeExpiredSnoozes(slotIso);
   const snap = await db
     .collection(COLLECTIONS.taskOccurrences)
     .where('status', 'in', ['open', 'snoozed', 'overdue'])
@@ -264,9 +308,9 @@ export async function dispatchDueNotifications(slot: Date): Promise<{
       await confirmAttempt(claim.attempt.id, claim.leaseId, {
         status: 'provider_accepted',
         providerAcceptedAt: new Date().toISOString(),
-        lastError: errors.length ? errors.join('; ') : undefined,
+        ...(errors.length ? { lastError: errors.join('; ') } : {}),
       });
-      await markOccurrenceReminded(doc.ref, occurrence, slotIso);
+      await markOccurrenceReminded(doc.ref, occurrence, template, slotIso);
     } else {
       failures += 1;
       const retryable =
@@ -274,7 +318,7 @@ export async function dispatchDueNotifications(slot: Date): Promise<{
         errors.some((message) => message.includes('429') || message.includes('500'));
       await confirmAttempt(claim.attempt.id, claim.leaseId, {
         status: retryable ? 'retry_scheduled' : 'failed_permanent',
-        retryAt: retryable ? addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES) : undefined,
+        ...(retryable ? { retryAt: addCadenceMinutes(slotIso, DISPATCH_RESOLUTION_MINUTES) } : {}),
         lastError: errors.join('; ') || 'All channels failed',
       });
     }

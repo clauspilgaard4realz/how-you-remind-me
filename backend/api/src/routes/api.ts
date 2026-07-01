@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { validateCreateSingleTask, validateSnoozeOccurrence } from '@hyrm/shared';
+import { validateCreateSingleTask, validateCreateTask, validateSnoozeOccurrence } from '@hyrm/shared';
 import { requireAuth } from '../middleware/auth.js';
 import { resolveSnoozeWakeAt } from '../lib/snooze.js';
 import {
   completeOccurrence,
   createSingleTask,
+  createTask,
   registerPushDevice,
   snoozeOccurrence,
 } from '../services/tasks.js';
@@ -22,6 +23,21 @@ apiRouter.post('/tasks/single', async (req, res) => {
 
   try {
     const result = await createSingleTask(req.user!.uid, req.body);
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'Create failed' });
+  }
+});
+
+apiRouter.post('/tasks', async (req, res) => {
+  const validationError = validateCreateTask(req.body);
+  if (validationError) {
+    res.status(400).json({ error: validationError });
+    return;
+  }
+
+  try {
+    const result = await createTask(req.user!.uid, req.body);
     res.status(201).json(result);
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : 'Create failed' });

@@ -35,6 +35,23 @@ export interface ReminderPhase {
   channels: ('push' | 'email')[];
 }
 
+export type RecurrenceKind = 'once' | 'daily' | 'weekly' | 'weekdays';
+export type NagCadence = '15m' | '1h' | 'daily';
+
+export interface TaskSchedule {
+  recurrence: RecurrenceKind;
+  /** HH:mm i Europe/Copenhagen, kvarterstid */
+  timeOfDay: string;
+  /** Luxon weekday 1=man … 7=søn — for weekly/weekdays */
+  daysOfWeek?: number[];
+  startLocalDate: string;
+  endLocalDate?: string;
+}
+
+export interface NagConfig {
+  cadence: NagCadence;
+}
+
 export interface RecurrenceRule {
   frequency: 'daily' | 'every_x_days' | 'weekly' | 'monthly';
   interval?: number;
@@ -66,9 +83,12 @@ export interface SingleTaskTemplate extends TaskTemplateBase {
 
 export interface RecurringTaskTemplate extends TaskTemplateBase {
   type: 'recurring';
-  startLocalDate: string;
+  schedule: TaskSchedule;
+  nag: NagConfig;
+  /** @deprecated legacy — brug schedule */
+  startLocalDate?: string;
   endLocalDate?: string;
-  recurrenceRule: RecurrenceRule;
+  recurrenceRule?: RecurrenceRule;
 }
 
 export type TaskTemplate = SingleTaskTemplate | RecurringTaskTemplate;
@@ -132,6 +152,15 @@ export interface DispatchHealth {
   openOccurrencesWithoutDevice: number;
   consecutiveFailures: number;
   emailConfigured?: boolean;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description?: string;
+  schedule: TaskSchedule;
+  nag: NagConfig;
+  group?: string;
+  priority?: TaskPriority;
 }
 
 export interface CreateSingleTaskRequest {

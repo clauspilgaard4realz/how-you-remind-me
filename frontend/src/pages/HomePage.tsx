@@ -14,6 +14,7 @@ import {
   type PushHealthState,
 } from '../lib/push';
 import { formatLocalDateTime } from '../lib/time';
+import { displayOccurrenceStatus } from '../lib/occurrence';
 import { useAuth } from '../hooks/useAuth';
 import { useDispatchHealth, useOpenOccurrences, useTaskTemplates } from '../hooks/useFirestoreData';
 import { PushHealthPanel } from '../components/PushHealthPanel';
@@ -56,7 +57,9 @@ function OccurrenceRow({
               Næste påmindelse: {formatLocalDateTime(occurrence.nextReminderAt)}
             </p>
           )}
-          <p className="text-xs uppercase tracking-wide text-slate-500">{occurrence.status}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            {displayOccurrenceStatus(occurrence.status, occurrence.snoozedUntil)}
+          </p>
           <SnoozeControls
             occurrence={occurrence}
             busy={snoozing === occurrence.id}

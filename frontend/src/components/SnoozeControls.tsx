@@ -6,6 +6,7 @@ import {
   formatLocalDateTime,
   quarterTimeOptions,
 } from '../lib/time';
+import { isSnoozeExpired } from '../lib/occurrence';
 import { Button } from './ui';
 
 const PRESETS: { preset: SnoozePreset; label: string }[] = [
@@ -49,12 +50,26 @@ export function SnoozeControls({
     }
   }
 
+  const snoozeActive =
+    occurrence.status === 'snoozed' &&
+    occurrence.snoozedUntil &&
+    !isSnoozeExpired(occurrence.snoozedUntil);
+  const snoozeExpired =
+    occurrence.status === 'snoozed' &&
+    occurrence.snoozedUntil &&
+    isSnoozeExpired(occurrence.snoozedUntil);
+
   return (
     <div className="mt-3 space-y-2 border-t border-slate-800 pt-3">
       <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Påmind mig</p>
-      {occurrence.status === 'snoozed' && occurrence.snoozedUntil && (
+      {snoozeActive && (
         <p className="text-sm text-sky-300">
-          Udsat til {formatLocalDateTime(occurrence.snoozedUntil)}
+          Udsat til {formatLocalDateTime(occurrence.snoozedUntil!)}
+        </p>
+      )}
+      {snoozeExpired && (
+        <p className="text-sm text-amber-300">
+          Snooze udløbet — næste påmindelse ved næste dispatch-slot
         </p>
       )}
       <div className="flex flex-wrap gap-2">
