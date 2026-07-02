@@ -164,6 +164,16 @@ export function occurrenceDisplayMeta(
   };
 }
 
+export function formatOccurrenceDateShort(localDate: string): string {
+  const [y, m, d] = localDate.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return new Intl.DateTimeFormat('da-DK', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(dt);
+}
+
 export function groupOccurrences(occurrences: TaskOccurrence[]): GroupedOccurrences[] {
   const today = localDateInTz();
   const tomorrow = addDaysLocal(today, 1);

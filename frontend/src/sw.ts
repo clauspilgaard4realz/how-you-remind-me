@@ -53,6 +53,8 @@ self.addEventListener('push', (event) => {
   const body = payload.body ?? 'Du har en påmindelse';
   const options = {
     body,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-32.png',
     tag: payload.tag ?? payload.occurrenceId,
     data: {
       url: payload.url ?? '/',

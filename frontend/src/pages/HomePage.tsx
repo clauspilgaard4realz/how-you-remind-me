@@ -295,6 +295,7 @@ export function HomePage() {
                   overdue={group.section === 'overdue'}
                   expanded={group.section === 'overdue'}
                   highlighted={occurrence.id === highlightId}
+                  showDate={group.section === 'later'}
                   completing={completing === occurrence.id}
                   snoozing={snoozing === occurrence.id}
                   onOpen={() => setSelectedOccurrence(occurrence)}

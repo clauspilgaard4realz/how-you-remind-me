@@ -1,5 +1,6 @@
 import type { SnoozePreset, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
 import {
+  formatOccurrenceDateShort,
   formatTimeShort,
   isOverdue,
   occurrenceDisplayMeta,
@@ -15,6 +16,7 @@ export function TaskRow({
   overdue,
   expanded,
   highlighted,
+  showDate,
   completing,
   snoozing,
   onOpen,
@@ -27,6 +29,7 @@ export function TaskRow({
   overdue?: boolean;
   expanded?: boolean;
   highlighted?: boolean;
+  showDate?: boolean;
   completing: boolean;
   snoozing: boolean;
   onOpen: () => void;
@@ -37,6 +40,20 @@ export function TaskRow({
   const showOverdue = overdue ?? isOverdue(occurrence);
   const busy = completing || snoozing;
   const time = formatTimeShort(occurrence.scheduledLocalTime);
+  const dateLabel = showDate
+    ? formatOccurrenceDateShort(occurrence.scheduledLocalDate)
+    : null;
+
+  function TimeColumn() {
+    return (
+      <div className="flex flex-col items-end gap-0.5">
+        <span className="text-[13px] font-bold text-hyrm-time">{time}</span>
+        {dateLabel && (
+          <span className="text-[10px] font-medium text-hyrm-muted-dim">{dateLabel}</span>
+        )}
+      </div>
+    );
+  }
 
   if (expanded || showOverdue) {
     return (
@@ -72,9 +89,7 @@ export function TaskRow({
                 </div>
               )}
             </div>
-            {!showOverdue && (
-              <span className="text-[13px] font-bold text-hyrm-time">{time}</span>
-            )}
+            {!showOverdue && <TimeColumn />}
           </div>
         </button>
         {showOverdue && (
@@ -111,7 +126,7 @@ export function TaskRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
           <span className="font-semibold text-[15px] text-hyrm-text">{title}</span>
-          <span className="text-[13px] font-bold text-hyrm-time">{time}</span>
+          <TimeColumn />
         </div>
         <div className="mt-1 text-[12px] font-medium text-hyrm-muted">{meta}</div>
         {nagText !== 'Kun én gang' && (

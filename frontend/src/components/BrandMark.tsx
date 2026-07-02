@@ -1,20 +1,27 @@
-export function BrandMark({ size = 60 }: { size?: number }) {
-  const radius = Math.round(size * 0.33);
-  const iconSize = Math.round(size * 0.33);
+type BrandMarkVariant = 'mark' | 'rounded' | 'icon';
+
+const SRC: Record<BrandMarkVariant, string> = {
+  mark: '/icons/hyrm-mark.svg',
+  rounded: '/icons/hyrm-icon-rounded.svg',
+  icon: '/icons/hyrm-icon.svg',
+};
+
+export function BrandMark({
+  size = 60,
+  variant = 'mark',
+}: {
+  size?: number;
+  variant?: BrandMarkVariant;
+}) {
   return (
-    <div
-      className="flex items-center justify-center bg-gradient-to-br from-hyrm-accent to-hyrm-danger shadow-[0_12px_30px_-8px_rgba(255,138,76,0.6)]"
-      style={{ width: size, height: size, borderRadius: radius }}
-    >
-      <div
-        className="relative rounded-full border-[3px] border-hyrm-bg"
-        style={{ width: iconSize, height: iconSize }}
-      >
-        <div
-          className="absolute left-1/2 -translate-x-1/2 rounded-sm bg-hyrm-bg"
-          style={{ top: -iconSize * 0.45, width: 3, height: iconSize * 0.4 }}
-        />
-      </div>
-    </div>
+    <img
+      src={SRC[variant]}
+      alt=""
+      width={size}
+      height={size}
+      className="block shrink-0"
+      aria-hidden
+      draggable={false}
+    />
   );
 }
