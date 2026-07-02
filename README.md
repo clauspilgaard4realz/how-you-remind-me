@@ -146,11 +146,7 @@ Datamodel har `reminderPhases`, men produktet bruger kun **én nag-kadence** bas
 
 - [x] Firestore composite index for `task_templates` defineret i `firestore.indexes.json`
 - [x] Driftsguide: [deploy/OPS.md](deploy/OPS.md)
-- [ ] **Deploy indexes til prod** — `task_templates` (ownerId + updatedAt) mangler stadig i `juice-da-car`:
-
-```powershell
-firebase deploy --only firestore:indexes --project juice-da-car
-```
+- [x] **Deploy indexes til prod** — inkl. `task_templates` (ownerId + updatedAt) deployet til `juice-da-car`
 - [ ] Log-baserede alarmer (Scheduler fejl, dispatcher 5xx)
 - [ ] Custom Cloud Monitoring metrics fra dispatcher (valgfrit)
 - [ ] Custom domain `reminders.replaymaker.dk` (når DNS er klar)

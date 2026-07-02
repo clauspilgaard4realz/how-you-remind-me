@@ -45,7 +45,7 @@ firebase deploy --only firestore:indexes --project juice-da-car
 
 Composite index på `task_templates` (ownerId + updatedAt) er påkrævet for opgavelisten i appen.
 
-**Status (juice-da-car):** `task_occurrences`-indexes er deployet; `task_templates`-indexet fra `firestore.indexes.json` er **ikke** deployet endnu — kør deploy-kommandoen ovenfor.
+**Status (juice-da-car):** Alle indexes fra `firestore.indexes.json` er deployet (inkl. `task_templates`).
 
 ## Alarmer (valgfrit, fase 5)
 
