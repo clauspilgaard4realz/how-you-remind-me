@@ -1,11 +1,15 @@
 import type { SnoozePreset, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
 import {
+  canIgnoreOccurrence,
   formatOccurrenceDateShort,
   formatTimeShort,
+  isDeadlineOverdue,
   isOverdue,
   occurrenceDisplayMeta,
   overdueDelayLabel,
+  resolveScheduleFromOccurrence,
 } from '../lib/taskDisplay';
+import { isDeadlineSchedule } from '@hyrm/shared';
 import { NagChip } from './ui';
 import { SnoozeControls } from './SnoozeControls';
 
@@ -21,6 +25,7 @@ export function TaskRow({
   snoozing,
   onOpen,
   onComplete,
+  onIgnore,
   onSnooze,
 }: {
   occurrence: TaskOccurrence;
@@ -34,10 +39,15 @@ export function TaskRow({
   snoozing: boolean;
   onOpen: () => void;
   onComplete: () => void;
+  onIgnore?: () => void;
   onSnooze: (preset: SnoozePreset, customAt?: string) => Promise<void>;
 }) {
   const { meta, nagText } = occurrenceDisplayMeta(occurrence, template);
   const showOverdue = overdue ?? isOverdue(occurrence);
+  const showIgnore = canIgnoreOccurrence(occurrence, template);
+  const deadlinePassed = isDeadlineOverdue(occurrence, template);
+  const schedule = resolveScheduleFromOccurrence(occurrence, template);
+  const isDeadlineTask = schedule ? isDeadlineSchedule(schedule) : false;
   const busy = completing || snoozing;
   const time = formatTimeShort(occurrence.scheduledLocalTime);
   const dateLabel = showDate
@@ -77,7 +87,9 @@ export function TaskRow({
               <div className="font-semibold text-[15px] text-hyrm-text">{title}</div>
               {showOverdue && (
                 <div className="mt-1 text-[12px] font-medium text-hyrm-danger">
-                  {overdueDelayLabel(occurrence)} · {meta.replace('↻ ', '')}
+                  {deadlinePassed
+                    ? 'Deadline overskredet'
+                    : `${overdueDelayLabel(occurrence)} · ${meta.replace('↻ ', '')}`}
                 </div>
               )}
               {!showOverdue && (
@@ -102,12 +114,24 @@ export function TaskRow({
             >
               {completing ? '…' : 'Klaret'}
             </button>
-            <SnoozeControls
-              occurrence={occurrence}
-              busy={snoozing}
-              onSnooze={onSnooze}
-              compact
-            />
+            {showIgnore && onIgnore && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onIgnore}
+                className="mt-2 h-10 w-full rounded-[11px] bg-hyrm-surface text-[13px] font-semibold text-hyrm-time disabled:opacity-50"
+              >
+                {completing ? '…' : 'Ignorer i dag'}
+              </button>
+            )}
+            {!showIgnore && !isDeadlineTask && (
+              <SnoozeControls
+                occurrence={occurrence}
+                busy={snoozing}
+                onSnooze={onSnooze}
+                compact
+              />
+            )}
           </>
         )}
       </div>

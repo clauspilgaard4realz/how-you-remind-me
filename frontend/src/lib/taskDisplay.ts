@@ -1,5 +1,14 @@
 import type { NagCadence, RecurrenceKind, TaskOccurrence, TaskSchedule, TaskTemplate } from '@hyrm/shared';
-import { resolveTemplateNag, resolveTemplateSchedule } from '@hyrm/shared';
+import {
+  canIgnoreDeadlineOccurrence,
+  formatDaysOfWeek,
+  isDeadlinePassed,
+  isDeadlineSchedule,
+  isWeeklySchedule,
+  normalizeScheduleRecurrence,
+  resolveTemplateNag,
+  resolveTemplateSchedule,
+} from '@hyrm/shared';
 import { isSnoozeExpired } from './occurrence';
 
 const TZ = 'Europe/Copenhagen';
@@ -53,7 +62,13 @@ export function formatTimeShort(isoOrTime: string): string {
 }
 
 export function isOverdue(occurrence: TaskOccurrence, now = Date.now()): boolean {
-  if (occurrence.status === 'completed' || occurrence.status === 'cancelled') return false;
+  if (
+    occurrence.status === 'completed' ||
+    occurrence.status === 'cancelled' ||
+    occurrence.status === 'ignored'
+  ) {
+    return false;
+  }
   if (
     occurrence.status === 'snoozed' &&
     occurrence.snoozedUntil &&
@@ -106,9 +121,10 @@ export function recurrenceLabel(schedule: TaskSchedule | null): string {
     case 'daily':
       return 'Dagligt';
     case 'weekly':
-      return 'Ugentlig';
     case 'weekdays':
-      return 'Bestemte ugedage';
+      return 'Ugentlig';
+    case 'deadline':
+      return 'Deadline';
     default:
       return schedule.recurrence;
   }
@@ -123,20 +139,21 @@ export function recurrenceMeta(
   if (schedule.recurrence === 'once' && time) {
     return `Én gang · kl. ${formatTimeShort(time)}`;
   }
-  if (schedule.recurrence === 'daily' || schedule.recurrence === 'weekly' || schedule.recurrence === 'weekdays') {
+  if (schedule.recurrence === 'daily') {
     return `↻ ${label}`;
   }
+  if (isWeeklySchedule(schedule)) {
+    const days = formatDaysOfWeek(schedule.daysOfWeek);
+    return days ? `↻ ${label} · ${days}` : `↻ ${label}`;
+  }
+  if (isDeadlineSchedule(schedule)) {
+    const days = formatDaysOfWeek(schedule.daysOfWeek);
+    const deadline = schedule.deadlineDate
+      ? ` · deadline ${formatOccurrenceDateShort(schedule.deadlineDate)}`
+      : '';
+    return days ? `↻ ${label} · ${days}${deadline}` : `↻ ${label}${deadline}`;
+  }
   return label;
-}
-
-function resolveScheduleFromOccurrence(
-  occurrence: TaskOccurrence,
-  template?: TaskTemplate
-): TaskSchedule | null {
-  const snapshot = occurrence.scheduleSnapshot as { schedule?: TaskSchedule } | undefined;
-  if (snapshot?.schedule) return snapshot.schedule;
-  if (template) return resolveTemplateSchedule(template);
-  return null;
 }
 
 function resolveNagFromOccurrence(
@@ -155,13 +172,46 @@ export function occurrenceDisplayMeta(
 ): { meta: string; nag: NagCadence; nagText: string; recurrence: RecurrenceKind | 'once' } {
   const schedule = resolveScheduleFromOccurrence(occurrence, template);
   const nag = resolveNagFromOccurrence(occurrence, template);
-  const recurrence = schedule?.recurrence ?? 'once';
+  const recurrence = schedule ? normalizeScheduleRecurrence(schedule.recurrence) : 'once';
   return {
     meta: recurrenceMeta(schedule, occurrence.scheduledLocalTime),
     nag,
     nagText: nagLabel(nag),
     recurrence,
   };
+}
+
+export function resolveScheduleFromOccurrence(
+  occurrence: TaskOccurrence,
+  template?: TaskTemplate
+): TaskSchedule | null {
+  const snapshot = occurrence.scheduleSnapshot as { schedule?: TaskSchedule } | undefined;
+  if (snapshot?.schedule) return snapshot.schedule;
+  if (template) return resolveTemplateSchedule(template);
+  return null;
+}
+
+export function canIgnoreOccurrence(
+  occurrence: TaskOccurrence,
+  template?: TaskTemplate
+): boolean {
+  const schedule = resolveScheduleFromOccurrence(occurrence, template);
+  if (!schedule) return false;
+  return canIgnoreDeadlineOccurrence(schedule, occurrence.scheduledLocalDate);
+}
+
+export function isDeadlineOverdue(
+  occurrence: TaskOccurrence,
+  template?: TaskTemplate
+): boolean {
+  const schedule = resolveScheduleFromOccurrence(occurrence, template);
+  if (!schedule || !isDeadlineSchedule(schedule)) return false;
+  return isDeadlinePassed(schedule, occurrence.scheduledLocalDate);
+}
+
+export function formatDeadlineDate(schedule: TaskSchedule | null): string | null {
+  if (!schedule?.deadlineDate) return null;
+  return formatOccurrenceDateShort(schedule.deadlineDate);
 }
 
 export function formatOccurrenceDateShort(localDate: string): string {

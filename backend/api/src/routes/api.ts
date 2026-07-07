@@ -1,6 +1,14 @@
 import { Router } from 'express';
-import { validateCreateSingleTask, validateCreateTask, validateSnoozeOccurrence } from '@hyrm/shared';
+import {
+  COLLECTIONS,
+  validateCreateSingleTask,
+  validateCreateTask,
+  validateSnoozeOccurrence,
+  type SnoozeOccurrenceRequest,
+  type TaskOccurrence,
+} from '@hyrm/shared';
 import { requireAuth } from '../middleware/auth.js';
+import { getDb } from '../lib/firebase.js';
 import { resolveSnoozeWakeAt } from '../lib/snooze.js';
 import {
   completeOccurrence,
@@ -8,6 +16,7 @@ import {
   createTask,
   deleteOccurrence,
   deleteTaskSeries,
+  ignoreOccurrence,
   registerPushDevice,
   snoozeOccurrence,
   updateOccurrenceInstance,
@@ -127,6 +136,24 @@ apiRouter.post('/occurrences/:id/complete', async (req, res) => {
   }
 });
 
+apiRouter.post('/occurrences/:id/ignore', async (req, res) => {
+  try {
+    await ignoreOccurrence(req.user!.uid, req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Ignore failed';
+    const status =
+      message === 'Occurrence not found'
+        ? 404
+        : message === 'Forbidden'
+          ? 403
+          : message === 'Cannot ignore this occurrence'
+            ? 409
+            : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
 apiRouter.post('/occurrences/:id/snooze', async (req, res) => {
   const validationError = validateSnoozeOccurrence(req.body ?? {});
   if (validationError) {
@@ -135,7 +162,25 @@ apiRouter.post('/occurrences/:id/snooze', async (req, res) => {
   }
 
   try {
-    const snoozedUntil = resolveSnoozeWakeAt(req.body);
+    const body = { ...(req.body ?? {}) } as SnoozeOccurrenceRequest;
+    if (body.preset === 'tomorrow' && !body.scheduledLocalTime) {
+      const snap = await getDb()
+        .collection(COLLECTIONS.taskOccurrences)
+        .doc(req.params.id)
+        .get();
+      if (!snap.exists) {
+        res.status(404).json({ error: 'Occurrence not found' });
+        return;
+      }
+      const occurrence = snap.data() as TaskOccurrence;
+      if (occurrence.ownerId !== req.user!.uid) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+      }
+      body.scheduledLocalTime = occurrence.scheduledLocalTime;
+    }
+
+    const snoozedUntil = resolveSnoozeWakeAt(body);
     const result = await snoozeOccurrence(req.user!.uid, req.params.id, snoozedUntil);
     res.status(200).json(result);
   } catch (err) {

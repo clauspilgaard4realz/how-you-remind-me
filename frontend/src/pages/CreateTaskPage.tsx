@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import type { CreateTaskRequest, NagCadence, RecurrenceKind, RecurringTaskTemplate } from '@hyrm/shared';
-import { WEEKDAY_OPTIONS, resolveTemplateSchedule } from '@hyrm/shared';
+import {
+  WEEKDAY_OPTIONS,
+  normalizeScheduleRecurrence,
+  resolveTemplateSchedule,
+} from '@hyrm/shared';
 import { apiFetch } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { useTaskTemplates } from '../hooks/useFirestoreData';
@@ -15,7 +19,7 @@ const RECURRENCE_OPTIONS: { value: RecurrenceKind; label: string }[] = [
   { value: 'once', label: 'Én gang' },
   { value: 'daily', label: 'Dagligt' },
   { value: 'weekly', label: 'Ugentlig' },
-  { value: 'weekdays', label: 'Bestemte ugedage' },
+  { value: 'deadline', label: 'Deadline' },
 ];
 
 const NAG_OPTIONS: { value: NagCadence; label: string }[] = [
@@ -47,6 +51,7 @@ export function CreateTaskPage() {
   const [endDate, setEndDate] = useState('');
   const [time, setTime] = useState(defaults.time);
   const [weekdays, setWeekdays] = useState<number[]>([3]);
+  const [deadlineDate, setDeadlineDate] = useState('');
   const [editScope, setEditScope] = useState<EditScope>('series');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -57,19 +62,23 @@ export function CreateTaskPage() {
     const schedule = resolveTemplateSchedule(template);
     if (!schedule) return;
     setTitle(template.title);
-    setRecurrence(schedule.recurrence);
+    setRecurrence(normalizeScheduleRecurrence(schedule.recurrence));
     setNagCadence(template.nag?.cadence ?? '15m');
     setStartDate(schedule.startLocalDate);
     setEndDate(schedule.endLocalDate ?? '');
     setTime(schedule.timeOfDay);
     if (schedule.daysOfWeek?.length) setWeekdays(schedule.daysOfWeek);
+    setDeadlineDate(schedule.deadlineDate ?? '');
     setInitialized(true);
   }, [isEdit, template]);
 
   function toggleWeekday(day: number) {
     setWeekdays((current) => {
-      if (recurrence === 'weekly') return [day];
-      return current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort();
+      if (current.includes(day)) {
+        const next = current.filter((d) => d !== day);
+        return next.length ? next : current;
+      }
+      return [...current, day].sort();
     });
   }
 
@@ -77,11 +86,14 @@ export function CreateTaskPage() {
     const schedule: CreateTaskRequest['schedule'] = {
       recurrence,
       timeOfDay: time,
-      startLocalDate: startDate,
-      endLocalDate: endDate || undefined,
+      startLocalDate: recurrence === 'deadline' ? defaults.date : startDate,
+      endLocalDate: recurrence === 'deadline' ? undefined : endDate || undefined,
     };
-    if (recurrence === 'weekly' || recurrence === 'weekdays') {
+    if (recurrence === 'weekly' || recurrence === 'deadline') {
       schedule.daysOfWeek = weekdays;
+    }
+    if (recurrence === 'deadline') {
+      schedule.deadlineDate = deadlineDate;
     }
     return {
       title: title.trim(),
@@ -223,12 +235,7 @@ export function CreateTaskPage() {
               <Pill
                 key={option.value}
                 selected={recurrence === option.value}
-                onClick={() => {
-                  setRecurrence(option.value);
-                  if (option.value === 'weekly' && weekdays.length !== 1) {
-                    setWeekdays([weekdays[0] ?? 3]);
-                  }
-                }}
+                onClick={() => setRecurrence(option.value)}
               >
                 {option.value !== 'once' ? `↻ ${option.label}` : option.label}
               </Pill>
@@ -236,10 +243,10 @@ export function CreateTaskPage() {
           </div>
         </fieldset>
 
-        {(recurrence === 'weekly' || recurrence === 'weekdays') && (
+        {(recurrence === 'weekly' || recurrence === 'deadline') && (
           <fieldset className="space-y-2">
             <legend className="text-[12px] font-semibold text-hyrm-muted">
-              {recurrence === 'weekly' ? 'Ugedag' : 'Ugedage'}
+              {recurrence === 'deadline' ? 'Påmindelsesdage' : 'Ugedage'}
             </legend>
             <div className="flex flex-wrap gap-2">
               {WEEKDAY_OPTIONS.map((option) => (
@@ -274,19 +281,21 @@ export function CreateTaskPage() {
         </fieldset>
 
         <div className="grid grid-cols-2 gap-3">
-          <label className="block space-y-2 text-sm">
-            <span className="text-[12px] font-semibold text-hyrm-muted">
-              {recurrence === 'once' ? 'Dato' : 'Startdato'}
-            </span>
-            <input
-              type="date"
-              className="h-[50px] w-full rounded-[14px] border border-white/10 bg-hyrm-surface px-3 text-hyrm-text"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block space-y-2 text-sm">
+          {recurrence !== 'deadline' && (
+            <label className="block space-y-2 text-sm">
+              <span className="text-[12px] font-semibold text-hyrm-muted">
+                {recurrence === 'once' ? 'Dato' : 'Startdato'}
+              </span>
+              <input
+                type="date"
+                className="h-[50px] w-full rounded-[14px] border border-white/10 bg-hyrm-surface px-3 text-hyrm-text"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+              />
+            </label>
+          )}
+          <label className={`block space-y-2 text-sm ${recurrence === 'deadline' ? 'col-span-2' : ''}`}>
             <span className="text-[12px] font-semibold text-hyrm-muted">Tidspunkt (kvarter)</span>
             <select
               className="h-[50px] w-full rounded-[14px] border border-white/10 bg-hyrm-surface px-3 text-hyrm-text"
@@ -302,7 +311,21 @@ export function CreateTaskPage() {
           </label>
         </div>
 
-        {recurrence !== 'once' && (
+        {recurrence === 'deadline' && (
+          <label className="block space-y-2 text-sm">
+            <span className="text-[12px] font-semibold text-hyrm-muted">Deadline</span>
+            <input
+              type="date"
+              className="h-[50px] w-full rounded-[14px] border border-white/10 bg-hyrm-surface px-3 text-hyrm-text"
+              value={deadlineDate}
+              onChange={(e) => setDeadlineDate(e.target.value)}
+              min={defaults.date}
+              required
+            />
+          </label>
+        )}
+
+        {recurrence !== 'once' && recurrence !== 'deadline' && (
           <label className="block space-y-2 text-sm">
             <span className="text-[12px] font-semibold text-hyrm-muted">
               Slutdato (valgfri — fx deadline)

@@ -6,6 +6,8 @@ export interface SnoozeOccurrenceRequest {
   preset: SnoozePreset;
   /** ISO-8601 UTC — påkrævet når preset er custom */
   customAt?: string;
+  /** HH:mm — bruges ved preset tomorrow for at sætte wake til næste dag samme tidspunkt */
+  scheduledLocalTime?: string;
 }
 
 export function ceilToDispatchSlotIso(iso: string): string {

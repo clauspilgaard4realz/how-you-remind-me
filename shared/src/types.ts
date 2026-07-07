@@ -5,6 +5,7 @@ export type OccurrenceStatus =
   | 'snoozed'
   | 'overdue'
   | 'expired'
+  | 'ignored'
   | 'cancelled'
   | 'cancelled_by_template_change';
 
@@ -35,17 +36,24 @@ export interface ReminderPhase {
   channels: ('push' | 'email')[];
 }
 
-export type RecurrenceKind = 'once' | 'daily' | 'weekly' | 'weekdays';
+export type RecurrenceKind = 'once' | 'daily' | 'weekly' | 'deadline';
+
+/** @deprecated Kun i eksisterende data — behandles som `weekly` */
+export type LegacyRecurrenceKind = 'weekdays';
+
+export type ScheduleRecurrence = RecurrenceKind | LegacyRecurrenceKind;
 export type NagCadence = '15m' | '1h' | 'daily';
 
 export interface TaskSchedule {
-  recurrence: RecurrenceKind;
+  recurrence: ScheduleRecurrence;
   /** HH:mm i Europe/Copenhagen, kvarterstid */
   timeOfDay: string;
-  /** Luxon weekday 1=man … 7=søn — for weekly/weekdays */
+  /** Luxon weekday 1=man … 7=søn — for weekly/deadline (én eller flere dage) */
   daysOfWeek?: number[];
   startLocalDate: string;
   endLocalDate?: string;
+  /** YYYY-MM-DD — påkrævet for deadline */
+  deadlineDate?: string;
 }
 
 export interface NagConfig {
@@ -105,6 +113,7 @@ export interface TaskOccurrence {
   scheduledLocalTime: string;
   status: OccurrenceStatus;
   completedAt?: string;
+  ignoredAt?: string;
   snoozedUntil?: string;
   nextReminderAt?: string;
   currentPhaseId?: string;

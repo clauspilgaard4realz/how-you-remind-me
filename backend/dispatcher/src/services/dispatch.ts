@@ -4,9 +4,11 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   COLLECTIONS,
   DISPATCH_RESOLUTION_MINUTES,
+  computeEffectiveNag,
   computeNextReminderAfterSlot,
   notificationAttemptId,
   resolveTemplateNag,
+  resolveTemplateSchedule,
   type NotificationAttempt,
   type PushDevice,
   type TaskOccurrence,
@@ -161,7 +163,9 @@ async function markOccurrenceReminded(
   template: TaskTemplate,
   slotIso: string
 ): Promise<void> {
-  const nag = resolveTemplateNag(template);
+  const baseNag = resolveTemplateNag(template);
+  const schedule = resolveTemplateSchedule(template);
+  const nag = computeEffectiveNag(baseNag, schedule, occurrence.scheduledLocalDate);
   const nextReminderAt = computeNextReminderAfterSlot(nag, slotIso, occurrence.scheduledAt);
   const update: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),

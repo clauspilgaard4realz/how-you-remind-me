@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   COLLECTIONS,
   TIMEZONE,
+  canIgnoreDeadlineOccurrence,
+  isDeadlineSchedule,
   nagToReminderPhase,
   singleOccurrenceId,
   type CreateSingleTaskRequest,
@@ -11,6 +13,7 @@ import {
   type RecurringTaskTemplate,
   type SingleTaskTemplate,
   type TaskOccurrence,
+  type TaskSchedule,
 } from '@hyrm/shared';
 import { getDb } from '../lib/firebase.js';
 import { materializeTemplate } from './materialize.js';
@@ -110,6 +113,45 @@ export async function createTask(
   return { template, occurrences };
 }
 
+function resolveOccurrenceSchedule(
+  occurrence: TaskOccurrence,
+  template?: RecurringTaskTemplate
+): TaskSchedule | null {
+  const snapshot = occurrence.scheduleSnapshot as { schedule?: TaskSchedule } | undefined;
+  if (snapshot?.schedule) return snapshot.schedule;
+  return template?.schedule ?? null;
+}
+
+async function completeDeadlineSeries(
+  ownerId: string,
+  templateId: string,
+  completedOccurrenceId: string
+): Promise<void> {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  const templateRef = db.collection(COLLECTIONS.taskTemplates).doc(templateId);
+  await templateRef.update({ active: false, updatedAt: now });
+
+  const openOccurrences = await db
+    .collection(COLLECTIONS.taskOccurrences)
+    .where('templateId', '==', templateId)
+    .where('status', 'in', ['open', 'snoozed', 'overdue'])
+    .get();
+
+  const batch = db.batch();
+  for (const doc of openOccurrences.docs) {
+    const isCompleted = doc.id === completedOccurrenceId;
+    batch.update(doc.ref, {
+      status: isCompleted ? 'completed' : 'cancelled',
+      ...(isCompleted ? { completedAt: now } : {}),
+      nextReminderAt: FieldValue.delete(),
+      updatedAt: now,
+    });
+  }
+  await batch.commit();
+}
+
 export async function completeOccurrence(ownerId: string, occurrenceId: string): Promise<void> {
   const db = getDb();
   const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrenceId);
@@ -123,10 +165,51 @@ export async function completeOccurrence(ownerId: string, occurrenceId: string):
   }
   if (data.status === 'completed') return;
 
+  const templateSnap = await db.collection(COLLECTIONS.taskTemplates).doc(data.templateId).get();
+  if (templateSnap.exists) {
+    const template = templateSnap.data() as RecurringTaskTemplate;
+    const schedule = resolveOccurrenceSchedule(data, template);
+    if (template.type === 'recurring' && schedule && isDeadlineSchedule(schedule)) {
+      await completeDeadlineSeries(ownerId, data.templateId, occurrenceId);
+      return;
+    }
+  }
+
   const now = new Date().toISOString();
   await ref.update({
     status: 'completed',
     completedAt: now,
+    nextReminderAt: FieldValue.delete(),
+    updatedAt: now,
+  });
+}
+
+export async function ignoreOccurrence(ownerId: string, occurrenceId: string): Promise<void> {
+  const db = getDb();
+  const ref = db.collection(COLLECTIONS.taskOccurrences).doc(occurrenceId);
+  const snap = await ref.get();
+  if (!snap.exists) {
+    throw new Error('Occurrence not found');
+  }
+  const data = snap.data() as TaskOccurrence;
+  if (data.ownerId !== ownerId) {
+    throw new Error('Forbidden');
+  }
+  if (data.status === 'ignored' || data.status === 'completed') return;
+
+  const templateSnap = await db.collection(COLLECTIONS.taskTemplates).doc(data.templateId).get();
+  const template = templateSnap.exists
+    ? (templateSnap.data() as RecurringTaskTemplate)
+    : undefined;
+  const schedule = resolveOccurrenceSchedule(data, template);
+  if (!schedule || !canIgnoreDeadlineOccurrence(schedule, data.scheduledLocalDate)) {
+    throw new Error('Cannot ignore this occurrence');
+  }
+
+  const now = new Date().toISOString();
+  await ref.update({
+    status: 'ignored',
+    ignoredAt: now,
     nextReminderAt: FieldValue.delete(),
     updatedAt: now,
   });

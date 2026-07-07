@@ -17,6 +17,7 @@ import {
   formatTodayEyebrow,
   groupOccurrences,
   occurrenceTitle,
+  canIgnoreOccurrence,
 } from '../lib/taskDisplay';
 import { useAuth } from '../hooks/useAuth';
 import { useDispatchHealth, useOpenOccurrences, useTaskTemplates } from '../hooks/useFirestoreData';
@@ -100,6 +101,10 @@ export function HomePage() {
       void snoozeOccurrence(highlightId, '15m').finally(() => {
         setSearchParams({}, { replace: true });
       });
+    } else if (actionParam === 'ignore') {
+      void ignoreOccurrence(highlightId).finally(() => {
+        setSearchParams({}, { replace: true });
+      });
     }
   }, [actionParam, highlightId, setSearchParams]);
 
@@ -171,13 +176,20 @@ export function HomePage() {
   }, [getIdToken]);
 
   async function snoozeOccurrence(id: string, preset: SnoozePreset, customAt?: string) {
+    const occurrence = occurrences.find((o) => o.id === id);
     setSnoozing(id);
     try {
       const token = await getIdToken();
       const result = await apiFetch<{ snoozedUntil: string }>(`/api/occurrences/${id}/snooze`, {
         method: 'POST',
         token,
-        body: JSON.stringify({ preset, customAt }),
+        body: JSON.stringify({
+          preset,
+          customAt,
+          ...(preset === 'tomorrow' && occurrence
+            ? { scheduledLocalTime: occurrence.scheduledLocalTime }
+            : {}),
+        }),
       });
       applySnoozeLocally(id, result.snoozedUntil);
       if (selectedOccurrence?.id === id) {
@@ -187,6 +199,27 @@ export function HomePage() {
       }
     } finally {
       setSnoozing(null);
+    }
+  }
+
+  async function ignoreOccurrence(id: string) {
+    markCompletedLocally(id);
+    setCompleting(id);
+    try {
+      const token = await getIdToken();
+      await apiFetch(`/api/occurrences/${id}/ignore`, {
+        method: 'POST',
+        token,
+      });
+      if (selectedOccurrence?.id === id) {
+        setSelectedOccurrence(null);
+        setDeleteConfirm(false);
+      }
+    } catch (err) {
+      unmarkCompletedLocally(id);
+      throw err;
+    } finally {
+      setCompleting(null);
     }
   }
 
@@ -300,6 +333,11 @@ export function HomePage() {
                   snoozing={snoozing === occurrence.id}
                   onOpen={() => setSelectedOccurrence(occurrence)}
                   onComplete={() => void completeOccurrence(occurrence.id)}
+                  onIgnore={
+                    canIgnoreOccurrence(occurrence, templateById(occurrence.templateId))
+                      ? () => void ignoreOccurrence(occurrence.id)
+                      : undefined
+                  }
                   onSnooze={(preset, customAt) =>
                     snoozeOccurrence(occurrence.id, preset, customAt)
                   }
@@ -324,6 +362,12 @@ export function HomePage() {
         }}
         onComplete={() =>
           selectedOccurrence && void completeOccurrence(selectedOccurrence.id)
+        }
+        onIgnore={
+          selectedOccurrence &&
+          canIgnoreOccurrence(selectedOccurrence, templateById(selectedOccurrence.templateId))
+            ? () => void ignoreOccurrence(selectedOccurrence.id)
+            : undefined
         }
         onDelete={() => setDeleteConfirm(true)}
       />

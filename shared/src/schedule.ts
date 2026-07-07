@@ -1,7 +1,14 @@
 import { DateTime } from 'luxon';
 import { DISPATCH_RESOLUTION_MINUTES, ROLLING_WINDOW_DAYS, TIMEZONE, isQuarterTime } from './constants.js';
 import { ceilToDispatchSlotIso } from './snooze.js';
-import type { NagCadence, NagConfig, RecurrenceKind, TaskSchedule, TaskTemplate } from './types.js';
+import type {
+  NagCadence,
+  NagConfig,
+  RecurrenceKind,
+  ScheduleRecurrence,
+  TaskSchedule,
+  TaskTemplate,
+} from './types.js';
 
 export interface OccurrenceSlot {
   localDate: string;
@@ -21,8 +28,59 @@ export function addCadenceMinutes(iso: string, minutes: number): string {
   return DateTime.fromISO(iso, { zone: 'utc' }).plus({ minutes }).toUTC().toISO()!;
 }
 
+export function normalizeScheduleRecurrence(recurrence: ScheduleRecurrence): RecurrenceKind {
+  return recurrence === 'weekdays' ? 'weekly' : recurrence;
+}
+
+export function isWeeklySchedule(schedule: Pick<TaskSchedule, 'recurrence'>): boolean {
+  return schedule.recurrence === 'weekly' || schedule.recurrence === 'weekdays';
+}
+
+export function isDeadlineSchedule(schedule: Pick<TaskSchedule, 'recurrence'>): boolean {
+  return schedule.recurrence === 'deadline';
+}
+
+export function isDeadlinePassed(
+  schedule: TaskSchedule,
+  localDate: string = DateTime.now().setZone(TIMEZONE).toFormat('yyyy-MM-dd')
+): boolean {
+  if (!schedule.deadlineDate) return false;
+  return localDate > schedule.deadlineDate;
+}
+
+export function canIgnoreDeadlineOccurrence(
+  schedule: TaskSchedule,
+  occurrenceLocalDate: string
+): boolean {
+  if (!isDeadlineSchedule(schedule) || !schedule.deadlineDate) return false;
+  return occurrenceLocalDate <= schedule.deadlineDate;
+}
+
+export function computeEffectiveNag(
+  nag: NagConfig,
+  schedule: TaskSchedule | null,
+  occurrenceLocalDate: string
+): NagConfig {
+  if (!schedule || !isDeadlineSchedule(schedule) || !schedule.deadlineDate) {
+    return nag;
+  }
+  const today = DateTime.now().setZone(TIMEZONE).toFormat('yyyy-MM-dd');
+  if (occurrenceLocalDate > schedule.deadlineDate || today > schedule.deadlineDate) {
+    return { cadence: '15m' };
+  }
+  return nag;
+}
+
+export function formatDaysOfWeek(days: number[] | undefined): string {
+  if (!days?.length) return '';
+  return WEEKDAY_OPTIONS.filter((option) => days.includes(option.value))
+    .map((option) => option.label)
+    .join(', ');
+}
+
 function matchesRecurrence(schedule: TaskSchedule, day: DateTime): boolean {
   const weekday = day.weekday;
+  const localDateStr = day.toFormat('yyyy-MM-dd');
   switch (schedule.recurrence) {
     case 'once':
     case 'daily':
@@ -30,6 +88,12 @@ function matchesRecurrence(schedule: TaskSchedule, day: DateTime): boolean {
     case 'weekly':
     case 'weekdays':
       return schedule.daysOfWeek?.includes(weekday) ?? false;
+    case 'deadline': {
+      if (!schedule.deadlineDate) return false;
+      if (localDateStr > schedule.deadlineDate) return true;
+      if (localDateStr === schedule.deadlineDate) return true;
+      return schedule.daysOfWeek?.includes(weekday) ?? false;
+    }
     default:
       return false;
   }
@@ -41,9 +105,10 @@ export function enumerateOccurrenceSlots(
   windowEndLocal: string
 ): OccurrenceSlot[] {
   const startBound = DateTime.fromISO(schedule.startLocalDate, { zone: TIMEZONE }).startOf('day');
-  const endBound = schedule.endLocalDate
-    ? DateTime.fromISO(schedule.endLocalDate, { zone: TIMEZONE }).endOf('day')
-    : null;
+  const endBound =
+    schedule.recurrence !== 'deadline' && schedule.endLocalDate
+      ? DateTime.fromISO(schedule.endLocalDate, { zone: TIMEZONE }).endOf('day')
+      : null;
 
   let cursor = DateTime.fromISO(windowStartLocal, { zone: TIMEZONE }).startOf('day');
   const windowEnd = DateTime.fromISO(windowEndLocal, { zone: TIMEZONE }).endOf('day');
@@ -176,16 +241,20 @@ export function validateTaskSchedule(schedule: TaskSchedule): string | null {
     return 'endLocalDate must be on or after startLocalDate';
   }
 
-  const kinds: RecurrenceKind[] = ['once', 'daily', 'weekly', 'weekdays'];
+  const kinds: ScheduleRecurrence[] = ['once', 'daily', 'weekly', 'weekdays', 'deadline'];
   if (!kinds.includes(schedule.recurrence)) return 'Invalid recurrence';
 
-  if (schedule.recurrence === 'weekly') {
-    if (schedule.daysOfWeek?.length !== 1) return 'weekly requires exactly one weekday';
+  if (isWeeklySchedule(schedule) && !schedule.daysOfWeek?.length) {
+    return 'weekly requires at least one weekday';
   }
-  if (schedule.recurrence === 'weekdays') {
-    if (!schedule.daysOfWeek?.length) return 'weekdays requires at least one weekday';
+  if (isDeadlineSchedule(schedule)) {
+    if (!schedule.deadlineDate) return 'deadline requires deadlineDate';
+    if (schedule.deadlineDate < schedule.startLocalDate) {
+      return 'deadlineDate must be on or after startLocalDate';
+    }
+    if (!schedule.daysOfWeek?.length) return 'deadline requires at least one weekday';
   }
-  if ((schedule.recurrence === 'weekly' || schedule.recurrence === 'weekdays') && schedule.daysOfWeek) {
+  if ((isWeeklySchedule(schedule) || isDeadlineSchedule(schedule)) && schedule.daysOfWeek) {
     for (const day of schedule.daysOfWeek) {
       if (day < 1 || day > 7) return 'daysOfWeek must be 1-7 (Mon-Sun)';
     }

@@ -15,6 +15,24 @@ interface PushPayload {
   tag?: string;
   url?: string;
   occurrenceId?: string;
+  canIgnore?: boolean;
+  primaryAction?: 'ignore' | 'complete';
+  secondaryAction?: 'complete' | 'snooze';
+}
+
+function buildNotificationActions(
+  payload: PushPayload
+): { action: string; title: string }[] {
+  if (payload.canIgnore) {
+    return [
+      { action: 'ignore', title: 'Ignorer' },
+      { action: 'complete', title: 'Klaret' },
+    ];
+  }
+  return [
+    { action: 'complete', title: 'Klaret' },
+    { action: 'snooze', title: 'Udsæt 15 min' },
+  ];
 }
 
 async function notifyClients(payload: PushPayload, title: string, body: string): Promise<void> {
@@ -36,6 +54,7 @@ function targetUrl(payload: PushPayload, action?: string): string {
   const params = new URLSearchParams({ occurrence: payload.occurrenceId });
   if (action === 'complete') params.set('action', 'complete');
   if (action === 'snooze') params.set('action', 'snooze');
+  if (action === 'ignore') params.set('action', 'ignore');
   return `/?${params.toString()}`;
 }
 
@@ -59,11 +78,9 @@ self.addEventListener('push', (event) => {
     data: {
       url: payload.url ?? '/',
       occurrenceId: payload.occurrenceId,
+      canIgnore: payload.canIgnore,
     },
-    actions: [
-      { action: 'complete', title: 'Klaret' },
-      { action: 'snooze', title: 'Udsæt 15 min' },
-    ],
+    actions: buildNotificationActions(payload),
   } as NotificationOptions;
 
   event.waitUntil(

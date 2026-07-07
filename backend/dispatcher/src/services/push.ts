@@ -1,6 +1,11 @@
 import webPush from 'web-push';
 import type { NagCadence, PushDevice, TaskOccurrence, TaskTemplate } from '@hyrm/shared';
-import { resolveTemplateNag } from '@hyrm/shared';
+import {
+  canIgnoreDeadlineOccurrence,
+  isDeadlineSchedule,
+  resolveTemplateNag,
+  resolveTemplateSchedule,
+} from '@hyrm/shared';
 
 let configured = false;
 
@@ -18,7 +23,17 @@ export function configureWebPush(): void {
 
 export async function sendPushToDevices(
   devices: PushDevice[],
-  payload: { title: string; body: string; tag: string; url: string; occurrenceId: string }
+  payload: {
+    title: string;
+    body: string;
+    tag: string;
+    url: string;
+    occurrenceId: string;
+    recurrence?: string;
+    canIgnore?: boolean;
+    primaryAction?: 'ignore' | 'complete';
+    secondaryAction?: 'complete' | 'snooze';
+  }
 ): Promise<Array<{ deviceId: string; ok: boolean; statusCode?: number; error?: string }>> {
   configureWebPush();
   const body = JSON.stringify(payload);
@@ -50,7 +65,13 @@ export async function sendPushToDevices(
   );
 }
 
-function nagBodyText(cadence: NagCadence): string {
+function nagBodyText(cadence: NagCadence, isDeadline = false, canIgnore = false): string {
+  if (isDeadline && canIgnore) {
+    return 'Deadline-påmindelse — ignorer for i dag eller marker som klaret.';
+  }
+  if (isDeadline) {
+    return 'Deadline overskredet — marker som klaret, når du er færdig.';
+  }
   switch (cadence) {
     case '15m':
       return 'Jeg nagger hvert 15. min, til du markerer den som klaret.';
@@ -66,13 +87,33 @@ function nagBodyText(cadence: NagCadence): string {
 export function buildPushPayload(
   occurrence: TaskOccurrence,
   template: TaskTemplate
-): { title: string; body: string; tag: string; url: string; occurrenceId: string } {
+): {
+  title: string;
+  body: string;
+  tag: string;
+  url: string;
+  occurrenceId: string;
+  recurrence: string;
+  canIgnore: boolean;
+  primaryAction: 'ignore' | 'complete';
+  secondaryAction?: 'complete' | 'snooze';
+} {
   const nag = resolveTemplateNag(template);
+  const schedule = resolveTemplateSchedule(template);
+  const isDeadline = schedule ? isDeadlineSchedule(schedule) : false;
+  const canIgnore = schedule
+    ? canIgnoreDeadlineOccurrence(schedule, occurrence.scheduledLocalDate)
+    : false;
+
   return {
     title: template.title,
-    body: nagBodyText(nag.cadence),
+    body: nagBodyText(nag.cadence, isDeadline, canIgnore),
     tag: occurrence.id,
     url: `/?occurrence=${occurrence.id}`,
     occurrenceId: occurrence.id,
+    recurrence: schedule?.recurrence ?? 'once',
+    canIgnore,
+    primaryAction: canIgnore ? 'ignore' : 'complete',
+    secondaryAction: canIgnore ? 'complete' : 'snooze',
   };
 }
